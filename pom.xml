@@ -12,7 +12,7 @@
     <artifactId>municipality-agent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>municipality-agent</name>
-    <description>municipality-agent</description>
+    <description>Conversational agent for municipal services</description>
     <url/>
     <licenses>
         <license/>
