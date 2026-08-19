@@ -1,0 +1,60 @@
+package com.municipality.agent.console;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+import java.io.Reader;
+
+/**
+ * Read-eval-print loop. Reads what you type, hands it to the agent, prints what
+ * the agent decided. For now, it only echoes: the agent does not exist yet.
+ *
+ * <p>Input and output arrive through the constructor rather than being taken from
+ * {@code System.in} and {@code System.out} inside the loop. In production
+ * {@link ConsoleConfig} hands it the real terminal; a test hands it a string to
+ * read from and a buffer to write into.
+ */
+@Component
+@Profile("!test")
+public class ConsoleRunner implements CommandLineRunner {
+
+    private static final String EXIT_COMMAND = "exit";
+
+    private final BufferedReader input;
+    private final PrintWriter output;
+
+    public ConsoleRunner(Reader input, PrintWriter output) {
+        this.input = new BufferedReader(input);
+        this.output = output;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        output.println();
+        output.println("Municipality agent. Type '" + EXIT_COMMAND + "' to quit.");
+        output.println();
+
+        while (true) {
+            output.print("you > ");
+            output.flush(); // print() never flushes on its own, and the prompt has no newline
+
+            String line = input.readLine();
+
+            if (line == null || line.trim().equalsIgnoreCase(EXIT_COMMAND)) {
+                break;
+            }
+            if (line.isBlank()) {
+                continue;
+            }
+
+            output.println("bot > echo: " + line.trim());
+            output.println();
+        }
+
+        output.println("Bye.");
+        output.flush();
+    }
+}
