@@ -50,11 +50,12 @@ class IncomingMessageTest {
 
     @Test
     void rejectsNullContents() {
-        // Java convention: NullPointerException for something missing (that is what
-        // Objects.requireNonNull throws), IllegalArgumentException for a value that is
-        // present but unusable. Empty list -> IAE above; no list at all -> NPE here.
+        // Missing and unusable are the same answer here: whatever is wrong with an
+        // argument, this constructor says so with IllegalArgumentException. Spring's
+        // own Assert.notNull does the same, rather than distinguishing a null with NPE.
         assertThatThrownBy(() -> messageWith(null))
-                .isInstanceOf(NullPointerException.class);
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("contents");
     }
 
     @Test

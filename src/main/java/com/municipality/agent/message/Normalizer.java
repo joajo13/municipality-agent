@@ -2,7 +2,6 @@ package com.municipality.agent.message;
 
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +28,10 @@ public class Normalizer {
     private final MediaDescriber describer;
 
     public Normalizer(MediaDescriber describer) {
-        this.describer = Objects.requireNonNull(describer, "describer is required");
+        if (describer == null) {
+            throw new IllegalArgumentException("describer is required");
+        }
+        this.describer = describer;
     }
 
     public NormalizedMessage normalize(IncomingMessage message) {
