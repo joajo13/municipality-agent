@@ -7,5 +7,4 @@ import java.time.Instant;
  * timing travel along untouched, so a decision can still be traced back to the
  * message that caused it.
  */
-public record NormalizedMessage(String traceId, String userId, Instant timestamp, String text) {
-}
+public record NormalizedMessage(String traceId, String userId, Instant timestamp, String text) {}
