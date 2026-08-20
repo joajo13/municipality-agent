@@ -57,6 +57,7 @@ the one test whose subject *is* the context. Everything else is exercised direct
 src/main/java/com/municipality/agent/
 ├── MunicipalityAgentApplication.java   Spring Boot entry point
 ├── console/                            the REPL and its I/O wiring
+├── message/                            what arrived, and how it becomes readable text
 └── package-info.java                   @NullMarked (JSpecify) per package
 ```
 
@@ -71,4 +72,7 @@ Requires **JDK 25**. The Maven wrapper handles the rest.
 
 ## Status
 
-Step 3 of 6 is done. The REPL echoes what you type — the agent itself does not exist yet.
+Step 4 is underway. The message model is in place: whatever a resident sends — text, a voice
+note, a photo with a caption, a shared pin — collapses into the one line a classifier will
+read, with media announced as a placeholder until something is there to transcribe or look
+at it. Routing and policy come next, and none of it is wired to the REPL yet: it still echoes.
