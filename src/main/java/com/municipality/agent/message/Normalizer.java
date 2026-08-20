@@ -28,9 +28,8 @@ public class Normalizer {
     private final MediaDescriber describer;
 
     public Normalizer(MediaDescriber describer) {
-        if (describer == null) {
-            throw new IllegalArgumentException("describer is required");
-        }
+        if (describer == null) throw new IllegalArgumentException("describer is required");
+
         this.describer = describer;
     }
 
