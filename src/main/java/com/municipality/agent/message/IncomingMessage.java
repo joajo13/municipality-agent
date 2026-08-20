@@ -17,10 +17,7 @@ import java.util.Objects;
  * @param timestamp when they sent it
  * @param contents  at least one piece of content
  */
-public record IncomingMessage(String traceId,
-                              String userId,
-                              Instant timestamp,
-                              List<MessageContent> contents) {
+public record IncomingMessage(String traceId, String userId, Instant timestamp, List<MessageContent> contents) {
 
     public IncomingMessage {
         requireText(traceId, "traceId");

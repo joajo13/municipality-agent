@@ -10,6 +10,5 @@ package com.municipality.agent.message;
  * into a compile error at each site that has to handle it, instead of a silent
  * fallthrough at runtime.
  */
-public sealed interface MessageContent
-        permits Text, Audio, Image, Document, Location, ButtonReply {
+public sealed interface MessageContent permits Text, Audio, Image, Document, Location, ButtonReply {
 }

@@ -39,11 +39,9 @@ public class Normalizer {
                 .filter(part -> !part.isEmpty())
                 .collect(Collectors.joining(" "));
 
-        return new NormalizedMessage(
-                message.traceId(),
-                message.userId(),
-                message.timestamp(),
-                capped(text.isEmpty() ? NOTHING_WAS_SAID : text));
+        String said = text.isEmpty() ? NOTHING_WAS_SAID : text;
+
+        return new NormalizedMessage(message.traceId(), message.userId(), message.timestamp(), capped(said));
     }
 
     /**

@@ -22,6 +22,10 @@ class NormalizerTest {
 
     private static final Instant SENT_AT = Instant.parse("2026-08-19T14:30:00Z");
 
+    private static final String VOICE_NOTE = "https://cdn.example/audio/1.ogg";
+    private static final String PHOTO = "https://cdn.example/img/1.jpg";
+    private static final String FILE = "https://cdn.example/doc/1.pdf";
+
     /**
      * The situation until a real model is wired in: media arrives undescribed.
      */
@@ -83,59 +87,79 @@ class NormalizerTest {
 
     @Test
     void audioIsAPlaceholderWhileNobodyHasTranscribedIt() {
-        assertThat(textOf(new Audio("https://cdn.example/audio/1.ogg"))).isEqualTo("[audio]");
+        assertThat(textOf(new Audio(VOICE_NOTE))).isEqualTo("[audio]");
     }
 
     @Test
     void aTranscriptIsTheResidentsOwnWordsAndGoesInUnmarked() {
         // Nothing brackets it: the resident said this, they just said it out loud.
-        assertThat(textOf(transcribing("hola queria saber por la castracion de gatos"), new Audio("https://cdn.example/audio/1.ogg"))).isEqualTo("hola queria saber por la castracion de gatos");
+        var said = "hola queria saber por la castracion de gatos";
+
+        var text = textOf(transcribing(said), new Audio(VOICE_NOTE));
+
+        assertThat(text).isEqualTo(said);
     }
 
     // --- image: a description is the model talking ---------------------------
 
     @Test
     void imageContributesItsCaption() {
-        assertThat(textOf(new Image("https://cdn.example/img/1.jpg", "mira el pozo de mi cuadra"))).isEqualTo("mira el pozo de mi cuadra");
+        var photo = new Image(PHOTO, "mira el pozo de mi cuadra");
+
+        assertThat(textOf(photo)).isEqualTo("mira el pozo de mi cuadra");
     }
 
     @Test
     void imageWithoutACaptionIsAPlaceholderWhileNobodyHasLookedAtIt() {
-        assertThat(textOf(new Image("https://cdn.example/img/1.jpg", null))).isEqualTo("[image]");
+        assertThat(textOf(new Image(PHOTO, null))).isEqualTo("[image]");
     }
 
     @Test
     void imageWithABlankCaptionIsAPlaceholder() {
-        assertThat(textOf(new Image("https://cdn.example/img/1.jpg", "   "))).isEqualTo("[image]");
+        assertThat(textOf(new Image(PHOTO, "   "))).isEqualTo("[image]");
     }
 
     @Test
     void whatTheModelSawIsMarkedAsSuchAndFollowsTheResidentsCaption() {
         // The classifier has to be able to tell apart what the person wrote
         // from what a model inferred. Hence the caption first, and the brackets.
-        assertThat(textOf(seeing("una calle de asfalto con un pozo lleno de agua"), new Image("https://cdn.example/img/1.jpg", "mira el pozo de mi cuadra"))).isEqualTo("mira el pozo de mi cuadra [image: una calle de asfalto con un pozo lleno de agua]");
+        var photo = new Image(PHOTO, "mira el pozo de mi cuadra");
+
+        var text = textOf(seeing("una calle con un pozo lleno de agua"), photo);
+
+        assertThat(text).isEqualTo("mira el pozo de mi cuadra [image: una calle con un pozo lleno de agua]");
     }
 
     @Test
     void aDescribedImageWithNoCaptionIsJustTheDescription() {
-        assertThat(textOf(seeing("una calle de asfalto con un pozo lleno de agua"), new Image("https://cdn.example/img/1.jpg", null))).isEqualTo("[image: una calle de asfalto con un pozo lleno de agua]");
+        var photo = new Image(PHOTO, null);
+
+        var text = textOf(seeing("una calle con un pozo lleno de agua"), photo);
+
+        assertThat(text).isEqualTo("[image: una calle con un pozo lleno de agua]");
     }
 
     // --- document ------------------------------------------------------------
 
     @Test
     void documentContributesItsFilename() {
-        assertThat(textOf(new Document("https://cdn.example/doc/1.pdf", "acta-de-nacimiento.pdf"))).isEqualTo("[document acta-de-nacimiento.pdf]");
+        var attached = new Document(FILE, "acta-de-nacimiento.pdf");
+
+        assertThat(textOf(attached)).isEqualTo("[document acta-de-nacimiento.pdf]");
     }
 
     @Test
     void documentWithoutAFilenameIsAPlainPlaceholder() {
-        assertThat(textOf(new Document("https://cdn.example/doc/1.pdf", null))).isEqualTo("[document]");
+        assertThat(textOf(new Document(FILE, null))).isEqualTo("[document]");
     }
 
     @Test
     void whatTheDocumentSaysIsMarkedTheSameWayAsAnImage() {
-        assertThat(textOf(reading("constancia de domicilio a nombre de Juan Perez"), new Document("https://cdn.example/doc/1.pdf", "constancia.pdf"))).isEqualTo("[document constancia.pdf: constancia de domicilio a nombre de Juan Perez]");
+        var attached = new Document(FILE, "constancia.pdf");
+
+        var text = textOf(reading("domicilio a nombre de Juan Perez"), attached);
+
+        assertThat(text).isEqualTo("[document constancia.pdf: domicilio a nombre de Juan Perez]");
     }
 
     // --- content that never needs a model ------------------------------------
@@ -148,19 +172,25 @@ class NormalizerTest {
     @Test
     void buttonReplyContributesTheTitleAndNotTheId() {
         // The id is routing metadata; the title is what the resident actually saw and tapped.
-        assertThat(textOf(new ButtonReply("appointments.start", "Pedir turno"))).isEqualTo("Pedir turno");
+        var tapped = new ButtonReply("appointments.start", "Pedir turno");
+
+        assertThat(textOf(tapped)).isEqualTo("Pedir turno");
     }
 
     // --- combining several contents ------------------------------------------
 
     @Test
     void severalContentsAreJoinedInTheOrderTheyArrived() {
-        assertThat(textOf(new Audio("https://cdn.example/audio/1.ogg"), new Text("es para castracion"))).isEqualTo("[audio] es para castracion");
+        var text = textOf(new Audio(VOICE_NOTE), new Text("es para castracion"));
+
+        assertThat(text).isEqualTo("[audio] es para castracion");
     }
 
     @Test
     void aContentThatContributesNothingDoesNotLeaveADoubleSpace() {
-        assertThat(textOf(new Text("hola"), new Text("   "), new Text("chau"))).isEqualTo("hola chau");
+        var text = textOf(new Text("hola"), new Text("   "), new Text("chau"));
+
+        assertThat(text).isEqualTo("hola chau");
     }
 
     @Test
@@ -172,7 +202,7 @@ class NormalizerTest {
     void thereIsAlwaysSomethingForTheClassifierToRead() {
         // Whatever arrives, and whether or not a model looked at it, the
         // classifier never receives a blank line.
-        assertThat(textOf(new Audio("https://cdn.example/audio/1.ogg"))).isNotBlank();
+        assertThat(textOf(new Audio(VOICE_NOTE))).isNotBlank();
         assertThat(textOf(new Location(-33.33, -60.21))).isNotBlank();
         assertThat(textOf(new Text("   "))).isNotBlank();
     }
@@ -220,8 +250,9 @@ class NormalizerTest {
     @Test
     void theCapAppliesToEverythingJoinedTogetherAndNotToEachContent() {
         // Three contents of two hundred characters each still add up to six hundred.
-        assertThat(textOf(new Text("a".repeat(200)), new Text("b".repeat(200)), new Text("c".repeat(200))))
-                .hasSize(500);
+        var text = textOf(new Text("a".repeat(200)), new Text("b".repeat(200)), new Text("c".repeat(200)));
+
+        assertThat(text).hasSize(500);
     }
 
     // --- everything that is not the text -------------------------------------
