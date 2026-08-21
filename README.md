@@ -58,6 +58,7 @@ src/main/java/com/municipality/agent/
 ├── MunicipalityAgentApplication.java   Spring Boot entry point
 ├── console/                            the REPL and its I/O wiring
 ├── message/                            what arrived, and how it becomes readable text
+├── router/                             what they are asking for, and what it needs
 └── package-info.java                   @NullMarked (JSpecify) per package
 ```
 
@@ -72,7 +73,10 @@ Requires **JDK 25**. The Maven wrapper handles the rest.
 
 ## Status
 
-Step 4 is underway. The message model is in place: whatever a resident sends — text, a voice
-note, a photo with a caption, a shared pin — collapses into the one line a classifier will
-read, with media announced as a placeholder until something is there to transcribe or look
-at it. Routing and policy come next, and none of it is wired to the REPL yet: it still echoes.
+Step 4 is underway. Whatever a resident sends — text, a voice note, a photo with a caption, a
+shared pin — collapses into the one line a classifier reads, with media announced as a
+placeholder until something is there to transcribe or look at it. That line is then routed to
+a topic and an action, which together say what the municipality still needs from the resident
+before it can act.
+
+Deciding what to do with that is next. Nothing is wired to the REPL yet: it still echoes.
