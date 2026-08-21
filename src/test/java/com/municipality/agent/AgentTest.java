@@ -1,5 +1,6 @@
 package com.municipality.agent;
 
+import com.municipality.agent.message.Image;
 import com.municipality.agent.message.IncomingMessage;
 import com.municipality.agent.message.NoMediaDescriber;
 import com.municipality.agent.message.Normalizer;
@@ -72,6 +73,20 @@ class AgentTest {
         var outcome = handle("   QUIERO LA LICENCIA   ");
 
         assertThat(outcome.message().text()).isEqualTo("QUIERO LA LICENCIA");
+    }
+
+    @Test
+    void aPhotoNobodyHasLookedAtDoesNotRouteAnywhereByAccident() {
+        // Once it reaches the classifier a placeholder is a word like any other. The day
+        // "imagen" or "documento" becomes a keyword, sending a photo would quietly route
+        // somebody into a procedure they never asked for.
+        var photo = new Image("https://cdn.example/img/1.jpg", null);
+        var incoming = new IncomingMessage("trace-1", "user-1", SENT_AT, List.of(photo));
+
+        var outcome = agent.handle(incoming);
+
+        assertThat(outcome.message().text()).isEqualTo("[imagen]");
+        assertThat(outcome.intent().domain()).isEqualTo(Domain.UNKNOWN);
     }
 
     @Test
