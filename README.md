@@ -46,9 +46,9 @@ the one test whose subject *is* the context. Everything else is exercised direct
 
 - [x] Toolchain: JDK 25, Maven project
 - [x] Spring Boot baseline
-- [x] Console REPL — echoes input, no agent behind it yet
-- [ ] **Message, routing and policy model, driven by a stubbed classifier** ← in progress
-- [ ] Real classifier on Spring AI
+- [x] Console REPL
+- [x] Message, routing and policy model, driven by a stubbed classifier
+- [ ] **Real classifier on Spring AI** ← in progress
 - [ ] Entity extraction and open-question tracking
 
 ## Layout
@@ -56,12 +56,51 @@ the one test whose subject *is* the context. Everything else is exercised direct
 ```
 src/main/java/com/municipality/agent/
 ├── MunicipalityAgentApplication.java   Spring Boot entry point
-├── console/                            the REPL and its I/O wiring
+├── Agent.java                          the three stages, joined up
+├── AgentConfig.java                    where the parts are assembled
+├── Outcome.java                        what one trip through the agent produced
+├── console/                            the REPL, and decisions put into words
 ├── message/                            what arrived, and how it becomes readable text
 ├── router/                             what they are asking for, and what it needs
 ├── policy/                             what the agent does about it
 └── package-info.java                   @NullMarked (JSpecify) per package
 ```
+
+## What it looks like
+
+```
+you > se rompio una luminaria en Sarmiento 450
+
+  texto      se rompio una luminaria en Sarmiento 450
+  intent     RECLAMOS / START_PROCEDURE  (1.0)
+  decision   StartFlow RECLAMOS / START_PROCEDURE
+
+bot > Listo, arranco el trámite de reclamos.
+
+you > quiero consultar el estado de mi reclamo
+
+  texto      quiero consultar el estado de mi reclamo
+  intent     RECLAMOS / CHECK_STATUS  (1.0)
+  decision   AskFor [CLAIM_NUMBER]
+
+bot > Para seguir necesito el número de reclamo.
+
+you > quiero hablar con una persona
+
+  texto      quiero hablar con una persona
+  intent     UNKNOWN / HANDOFF  (1.0)
+  decision   Handoff UNKNOWN
+
+bot > Te paso con una persona.
+```
+
+Filing a complaint needs nothing, so it starts. Asking after one needs its number, which
+nobody has given, so it asks. And somebody who asked for a human gets one, whatever the
+agent did or did not understand about the topic.
+
+The trace above the reply is deliberate: a decision that looks right for the wrong reason
+is indistinguishable from one that is right, and that difference is what this console is
+for.
 
 ## Build and run
 
@@ -74,12 +113,11 @@ Requires **JDK 25**. The Maven wrapper handles the rest.
 
 ## Status
 
-Step 4 is underway. Whatever a resident sends — text, a voice note, a photo with a caption, a
-shared pin — collapses into the one line a classifier reads, with media announced as a
-placeholder until something is there to transcribe or look at it. That line is then routed to
-a topic and an action, which together say what the municipality still needs from the resident
-before it can act.
+The pipeline runs end to end. Whatever a resident sends — text, a voice note, a photo with
+a caption, a shared pin — collapses into the one line a classifier reads, gets routed to a
+topic and an action, and becomes one of five decisions: run the procedure, ask for what is
+missing, answer, offer a menu, or put a person on.
 
-From there the decision is plain Java: run the procedure, ask for what is still missing,
-answer, offer a menu, or put a person on. Wiring the three together is what is left — the
-REPL still echoes.
+What decides is a stand-in that matches keywords, and nothing is remembered between turns,
+so a procedure that needs a dni will ask for it again every time. A real model comes next,
+and memory after that.
