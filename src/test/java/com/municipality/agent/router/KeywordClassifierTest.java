@@ -49,8 +49,8 @@ class KeywordClassifierTest {
     }
 
     @Test
-    void anythingItDoesNotRecogniseIsOutOfDomain() {
-        assertThat(classify("cuanto sale el dolar hoy").domain()).isEqualTo(Domain.OUT_OF_DOMAIN);
+    void anythingItDoesNotRecogniseIsUnknown() {
+        assertThat(classify("cuanto sale el dolar hoy").domain()).isEqualTo(Domain.UNKNOWN);
     }
 
     // --- how it matches ------------------------------------------------------
@@ -127,7 +127,7 @@ class KeywordClassifierTest {
         // to talk to somebody.
         var intent = classify("quiero hablar con una persona");
 
-        assertThat(intent.domain()).isEqualTo(Domain.OUT_OF_DOMAIN);
+        assertThat(intent.domain()).isEqualTo(Domain.UNKNOWN);
         assertThat(intent.action()).isEqualTo(Action.HANDOFF);
     }
 
@@ -141,7 +141,8 @@ class KeywordClassifierTest {
 
     @Test
     void recognisingNothingAtAllIsNoConfidenceAtAll() {
-        assertThat(classify("cuanto sale el dolar hoy").confidence()).isEqualTo(0.0);
+        // Not a single word it knows -- not even one that gives away the action.
+        assertThat(classify("esta lloviendo muchisimo").confidence()).isEqualTo(0.0);
     }
 
     @Test

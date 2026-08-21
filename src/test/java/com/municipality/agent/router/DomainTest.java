@@ -31,6 +31,16 @@ class DomainTest {
     }
 
     @Test
+    void checkingSomethingAtSaludStillIdentifiesTheResident() {
+        assertThat(Domain.SALUD.requires(CHECK_STATUS)).containsExactly(DNI);
+    }
+
+    @Test
+    void checkingALicenciaStillIdentifiesTheResident() {
+        assertThat(Domain.LICENCIAS.requires(CHECK_STATUS)).containsExactly(DNI);
+    }
+
+    @Test
     void checkingAReclamoNeedsItsNumber() {
         assertThat(Domain.RECLAMOS.requires(CHECK_STATUS)).containsExactly(CLAIM_NUMBER);
     }
@@ -64,9 +74,9 @@ class DomainTest {
     }
 
     @Test
-    void outOfDomainNeedsNothing() {
-        assertThat(Domain.OUT_OF_DOMAIN.requires(START_PROCEDURE)).isEmpty();
-        assertThat(Domain.OUT_OF_DOMAIN.requires(INFORMATION)).isEmpty();
+    void unknownNeedsNothing() {
+        assertThat(Domain.UNKNOWN.requires(START_PROCEDURE)).isEmpty();
+        assertThat(Domain.UNKNOWN.requires(INFORMATION)).isEmpty();
     }
 
     @Test
