@@ -111,12 +111,12 @@ class NormalizerTest {
 
     @Test
     void imageWithoutACaptionIsAPlaceholderWhileNobodyHasLookedAtIt() {
-        assertThat(textOf(new Image(PHOTO, null))).isEqualTo("[image]");
+        assertThat(textOf(new Image(PHOTO, null))).isEqualTo("[imagen]");
     }
 
     @Test
     void imageWithABlankCaptionIsAPlaceholder() {
-        assertThat(textOf(new Image(PHOTO, "   "))).isEqualTo("[image]");
+        assertThat(textOf(new Image(PHOTO, "   "))).isEqualTo("[imagen]");
     }
 
     @Test
@@ -127,7 +127,7 @@ class NormalizerTest {
 
         var text = textOf(seeing("una calle con un pozo lleno de agua"), photo);
 
-        assertThat(text).isEqualTo("mira el pozo de mi cuadra [image: una calle con un pozo lleno de agua]");
+        assertThat(text).isEqualTo("mira el pozo de mi cuadra [imagen: una calle con un pozo lleno de agua]");
     }
 
     @Test
@@ -136,7 +136,7 @@ class NormalizerTest {
 
         var text = textOf(seeing("una calle con un pozo lleno de agua"), photo);
 
-        assertThat(text).isEqualTo("[image: una calle con un pozo lleno de agua]");
+        assertThat(text).isEqualTo("[imagen: una calle con un pozo lleno de agua]");
     }
 
     // --- document ------------------------------------------------------------
@@ -145,12 +145,12 @@ class NormalizerTest {
     void documentContributesItsFilename() {
         var attached = new Document(FILE, "acta-de-nacimiento.pdf");
 
-        assertThat(textOf(attached)).isEqualTo("[document acta-de-nacimiento.pdf]");
+        assertThat(textOf(attached)).isEqualTo("[documento acta-de-nacimiento.pdf]");
     }
 
     @Test
     void documentWithoutAFilenameIsAPlainPlaceholder() {
-        assertThat(textOf(new Document(FILE, null))).isEqualTo("[document]");
+        assertThat(textOf(new Document(FILE, null))).isEqualTo("[documento]");
     }
 
     @Test
@@ -159,14 +159,14 @@ class NormalizerTest {
 
         var text = textOf(reading("domicilio a nombre de Juan Perez"), attached);
 
-        assertThat(text).isEqualTo("[document constancia.pdf: domicilio a nombre de Juan Perez]");
+        assertThat(text).isEqualTo("[documento constancia.pdf: domicilio a nombre de Juan Perez]");
     }
 
     // --- content that never needs a model ------------------------------------
 
     @Test
     void locationBecomesItsCoordinates() {
-        assertThat(textOf(new Location(-33.33, -60.21))).isEqualTo("[location -33.33,-60.21]");
+        assertThat(textOf(new Location(-33.33, -60.21))).isEqualTo("[ubicación -33.33,-60.21]");
     }
 
     @Test
@@ -225,7 +225,7 @@ class NormalizerTest {
 
     @Test
     void aMessageThatSaysNothingAtAllIsMarkedAsEmpty() {
-        assertThat(textOf(new Text("   "))).isEqualTo("[empty]");
+        assertThat(textOf(new Text("   "))).isEqualTo("[sin texto]");
     }
 
     // --- length ----------------------------------------------------------------

@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
  *
  * <p>It does not look at media itself. It asks a {@link MediaDescriber}, and when
  * that has nothing to say it falls back to announcing what arrived — {@code [audio]},
- * {@code [image]}. Those placeholders live here rather than in the describer on
+ * {@code [imagen]}. Those placeholders live here rather than in the describer on
  * purpose: they mean "nothing is known about this", which is the normaliser's
  * conclusion to draw, not the describer's answer.
  *
@@ -23,7 +23,7 @@ public class Normalizer {
     private static final int MAX_LENGTH = 500;
 
     private static final String ELLIPSIS = "...";
-    private static final String NOTHING_WAS_SAID = "[empty]";
+    private static final String NOTHING_WAS_SAID = "[sin texto]";
 
     private final MediaDescriber describer;
 
@@ -55,7 +55,7 @@ public class Normalizer {
             case Audio audio -> describer.describe(audio).map(String::strip).orElse("[audio]");
             case Image image -> contributionOf(image);
             case Document document -> contributionOf(document);
-            case Location(var latitude, var longitude) -> "[location " + latitude + "," + longitude + "]";
+            case Location(var latitude, var longitude) -> "[ubicación " + latitude + "," + longitude + "]";
             case ButtonReply(_, var title) -> title;
         };
     }
@@ -65,17 +65,17 @@ public class Normalizer {
         String seen = textOrNull(describer.describe(image).orElse(null));
 
         if (seen == null) {
-            return caption == null ? "[image]" : caption;
+            return caption == null ? "[imagen]" : caption;
         }
         // The resident's own words first, then what the model made of the photo.
-        return caption == null ? "[image: " + seen + "]" : caption + " [image: " + seen + "]";
+        return caption == null ? "[imagen: " + seen + "]" : caption + " [imagen: " + seen + "]";
     }
 
     private String contributionOf(Document document) {
         String filename = textOrNull(document.filename());
         String read = textOrNull(describer.describe(document).orElse(null));
 
-        String label = filename == null ? "document" : "document " + filename;
+        String label = filename == null ? "documento" : "documento " + filename;
         return read == null ? "[" + label + "]" : "[" + label + ": " + read + "]";
     }
 
