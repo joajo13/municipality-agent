@@ -59,6 +59,7 @@ src/main/java/com/municipality/agent/
 ├── console/                            the REPL and its I/O wiring
 ├── message/                            what arrived, and how it becomes readable text
 ├── router/                             what they are asking for, and what it needs
+├── policy/                             what the agent does about it
 └── package-info.java                   @NullMarked (JSpecify) per package
 ```
 
@@ -79,4 +80,6 @@ placeholder until something is there to transcribe or look at it. That line is t
 a topic and an action, which together say what the municipality still needs from the resident
 before it can act.
 
-Deciding what to do with that is next. Nothing is wired to the REPL yet: it still echoes.
+From there the decision is plain Java: run the procedure, ask for what is still missing,
+answer, offer a menu, or put a person on. Wiring the three together is what is left — the
+REPL still echoes.
