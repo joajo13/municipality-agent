@@ -1,0 +1,92 @@
+# Publishing. Runs on a tag and nowhere else.
+#
+# Nothing to configure: it publishes to this repository's own package registry using the
+# token GitHub already provides. To publish somewhere else, set the two variables named
+# below and the workflow follows them:
+#
+#   REGISTRY   (repository variable) - defaults to ghcr.io
+#   IMAGE_NAME (repository variable) - defaults to this repository's name
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || github.repository }}
+
+jobs:
+
+  publish:
+    name: build, check and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: temurin
+          cache: maven
+
+      # The same gate as every other build. A tag is not a reason to skip the tests; it is
+      # the one moment they matter most.
+      - name: Build, test and enforce coverage
+        run: ./mvnw -B -ntp verify
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Work out what to call it
+        id: names
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.names.outputs.tags }}
+          labels: ${{ steps.names.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # What is in the image, in a form somebody can search when the next name-brand
+      # vulnerability is announced and the question is whether this is affected.
+      - name: List what is inside it
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}
+          format: spdx-json
+          artifact-name: sbom.spdx.json
+
+      # Signed provenance: what built this image, from which commit, with which workflow.
+      - name: Attest where it came from
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

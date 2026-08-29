@@ -1,0 +1,34 @@
+# A dependency that is not updated is a dependency that will be updated in a hurry, on a
+# day chosen by somebody else.
+version: 2
+
+updates:
+
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      # One pull request for the framework rather than nine. They are released together
+      # and they are tested together.
+      spring:
+        patterns:
+          - "org.springframework*:*"
+      test-tooling:
+        patterns:
+          - "org.junit*:*"
+          - "org.assertj:*"
+          - "org.mockito:*"
+          - "com.tngtech.archunit:*"
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

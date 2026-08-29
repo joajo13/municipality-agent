@@ -1,0 +1,135 @@
+# The checks that are worth running but not worth waiting for on every push.
+#
+# Two of them need something set, and both degrade rather than fail without it:
+#
+#   NVD_API_KEY (repository secret) - dependency scanning works without it and takes
+#                                     twenty minutes instead of two.
+#   Code scanning enabled           - CodeQL and Trivy upload SARIF; without it the
+#                                     findings are in the log instead of the tab.
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Nightly, because a dependency does not have to change for it to become a
+    # vulnerability. Most findings arrive on a day nobody pushed anything.
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+
+  dependencies:
+    name: known vulnerabilities in what we depend on
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: temurin
+          cache: maven
+
+      # The database is large and changes daily. Caching it is the difference between a
+      # job that runs nightly and a job nobody enables.
+      - name: Reuse yesterday's vulnerability database
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: nvd-${{ github.run_id }}
+          restore-keys: nvd-
+
+      - name: Scan
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./mvnw -B -ntp -Psecurity verify -DskipTests
+
+      - name: Publish the findings
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/dependency-check-report.sarif
+          category: dependencies
+        continue-on-error: true
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check
+          path: target/dependency-check-report.*
+          retention-days: 30
+          if-no-files-found: warn
+
+  code:
+    name: what the code itself gives away
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: temurin
+          cache: maven
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          # The extended queries include the ones about injection and about what ends up
+          # in a log, which is most of what could go wrong in this particular service.
+          queries: security-extended
+
+      # CodeQL wants a real build: it reads the bytecode, not the source.
+      - name: Build for analysis
+        run: ./mvnw -B -ntp -DskipTests package
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: code
+
+  image:
+    name: what is in the image besides this code
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: municipality-agent:scan
+          cache-from: type=gha
+
+      - name: Scan the image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: municipality-agent:scan
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Publish the findings
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: image
+        continue-on-error: true
