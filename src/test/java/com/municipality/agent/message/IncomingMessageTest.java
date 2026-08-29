@@ -102,4 +102,13 @@ class IncomingMessageTest {
         assertThatThrownBy(() -> message.contents().add(new Text("colado")))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
+
+    @Test
+    void aMessageThatCarriesNothingIsNotAMessage() {
+        var now = java.time.Instant.parse("2026-08-24T12:00:00Z");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> new IncomingMessage("trace-1", "user-1", now, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

@@ -267,4 +267,10 @@ class NormalizerTest {
         assertThat(normalized.userId()).isEqualTo("user-9");
         assertThat(normalized.timestamp()).isEqualTo(SENT_AT);
     }
+
+    @Test
+    void aNormaliserWithNothingToAskAboutMediaIsNotANormaliser() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new Normalizer(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

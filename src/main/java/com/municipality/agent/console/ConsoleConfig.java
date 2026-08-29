@@ -1,6 +1,6 @@
 package com.municipality.agent.console;
 
-import com.municipality.agent.observability.Turns;
+import com.municipality.agent.Turns;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +39,14 @@ public class ConsoleConfig {
      * and without this, typing "exit" would print "Bye." and then sit there.
      */
     @Bean
-    ConsoleRunner consoleRunner(Reader consoleInput, PrintWriter consoleOutput, Turns turns, ApplicationContext context) {
-        return new ConsoleRunner(consoleInput, consoleOutput, turns,
+    ConsoleRunner consoleRunner(
+            Reader consoleInput,
+            PrintWriter consoleOutput,
+            Turns turns,
+            java.time.Clock clock,
+            ApplicationContext context) {
+
+        return new ConsoleRunner(consoleInput, consoleOutput, turns, clock,
                 () -> System.exit(SpringApplication.exit(context)));
     }
 }

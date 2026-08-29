@@ -1,6 +1,6 @@
 package com.municipality.agent.console;
 
-import com.municipality.agent.observability.Turns;
+import com.municipality.agent.Turns;
 import com.municipality.agent.support.Agents;
 import org.junit.jupiter.api.Test;
 
@@ -23,13 +23,69 @@ class ConsoleRunnerTest {
         return Agents.watched(Agents.keyword());
     }
 
+    /** The same agent, billed as if a model had answered, so the cost line appears. */
+    private static Turns billedAgent() {
+        return Agents.watched(Agents.around(
+                Agents.spending(412, 18), new com.municipality.agent.conversation.InMemoryConversations()));
+    }
+
     /** Feeds {@code typed} to the console as if a user had typed it; returns everything printed. */
     private String run(String typed) throws Exception {
         var output = new StringWriter();
-        new ConsoleRunner(new StringReader(typed), new PrintWriter(output), realAgent()).run();
+        new ConsoleRunner(new StringReader(typed), new PrintWriter(output), realAgent(), NOON).run();
         // println() emits \r\n on Windows and \n elsewhere. Normalise so the
         // assertions below read the same on every machine.
         return output.toString().replace("\r\n", "\n");
+    }
+
+    /** A clock that does not move, so two runs of the same script are the same run. */
+    private static final java.time.Clock NOON =
+            java.time.Clock.fixed(java.time.Instant.parse("2026-08-24T12:00:00Z"), java.time.ZoneOffset.UTC);
+
+    private static String runWith(Turns turns, String typed) throws Exception {
+        var output = new StringWriter();
+        new ConsoleRunner(new StringReader(typed), new PrintWriter(output), turns, NOON).run();
+
+        return output.toString().replace("\r\n", "\n");
+    }
+
+    // --- the trace under the answer ------------------------------------------
+
+    @Test
+    void theTraceSaysWhatWasHandedOverAndWhatIsRemembered() throws Exception {
+        var printed = run("quiero sacar la licencia\nmi dni es 20123456\nexit\n");
+
+        assertThat(printed).contains("recibido   [DNI]").contains("recordado  [DNI]");
+    }
+
+    @Test
+    void theTraceNeverPrintsTheValueOfAnything() throws Exception {
+        // A developer reading this needs to know a document number arrived, not what it
+        // was. The console is a window onto somebody's conversation.
+        assertThat(run("mi dni es 20123456\nexit\n")).doesNotContain("20123456 ");
+    }
+
+    @Test
+    void aTurnThatCostSomethingSaysWhatItCost() throws Exception {
+        var printed = runWith(billedAgent(), "quiero sacar la licencia\nexit\n");
+
+        assertThat(printed).contains("costo      USD 0.000502").contains("412 in / 18 out");
+    }
+
+    @Test
+    void aTurnThatCostNothingDoesNotMentionMoney() throws Exception {
+        assertThat(run("hola\nexit\n")).doesNotContain("costo");
+    }
+
+    @Test
+    void endingTheLoopEndsWhateverIsHoldingTheProcessOpen() throws Exception {
+        var stopped = new java.util.concurrent.atomic.AtomicBoolean();
+        var output = new StringWriter();
+
+        new ConsoleRunner(new StringReader("exit\n"), new PrintWriter(output), realAgent(), NOON,
+                () -> stopped.set(true)).run();
+
+        assertThat(stopped).isTrue();
     }
 
     // --- the loop itself -----------------------------------------------------

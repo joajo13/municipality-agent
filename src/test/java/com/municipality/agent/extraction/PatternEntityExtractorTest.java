@@ -102,6 +102,16 @@ class PatternEntityExtractorTest {
     }
 
     @Test
+    void aNumberTooLongToBeAClaimNumberIsNotOne() {
+        assertThat(from("12345678901", CLAIM_NUMBER)).isEmpty();
+    }
+
+    @Test
+    void aDocumentNumberOfNineDigitsIsNotADocumentNumber() {
+        assertThat(from("123456789", DNI)).isEmpty();
+    }
+
+    @Test
     void aHouseNumberInAComplaintIsNotAnIdentifier() {
         assertThat(from("se rompio una luminaria en Sarmiento 450")).isEmpty();
     }

@@ -1,4 +1,8 @@
-package com.municipality.agent.router;
+package com.municipality.agent.ai;
+
+import com.municipality.agent.router.Action;
+import com.municipality.agent.router.Domain;
+import com.municipality.agent.router.Intent;
 
 /**
  * The shape the model is asked to answer in.

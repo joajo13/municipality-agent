@@ -1,6 +1,5 @@
-package com.municipality.agent.observability;
+package com.municipality.agent;
 
-import com.municipality.agent.Agent;
 import com.municipality.agent.conversation.ConcurrentTurn;
 import com.municipality.agent.conversation.Conversation;
 import com.municipality.agent.conversation.Conversations;

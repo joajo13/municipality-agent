@@ -2,7 +2,7 @@ package com.municipality.agent.support;
 
 import com.municipality.agent.Agent;
 import com.municipality.agent.observability.Pseudonyms;
-import com.municipality.agent.observability.Turns;
+import com.municipality.agent.Turns;
 import com.municipality.agent.conversation.Conversations;
 import com.municipality.agent.conversation.InMemoryConversations;
 import com.municipality.agent.extraction.PatternEntityExtractor;

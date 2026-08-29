@@ -1,7 +1,7 @@
 package com.municipality.agent.console;
 
 import com.municipality.agent.Outcome;
-import com.municipality.agent.observability.Turns;
+import com.municipality.agent.Turns;
 import com.municipality.agent.message.IncomingMessage;
 import com.municipality.agent.message.Text;
 import org.springframework.boot.CommandLineRunner;
@@ -9,7 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -43,16 +43,18 @@ public class ConsoleRunner implements CommandLineRunner {
     private final Turns turns;
     private final DecisionRenderer renderer = new DecisionRenderer();
 
+    private final Clock clock;
     private final Runnable whenDone;
 
-    public ConsoleRunner(Reader input, PrintWriter output, Turns turns) {
-        this(input, output, turns, () -> {});
+    public ConsoleRunner(Reader input, PrintWriter output, Turns turns, Clock clock) {
+        this(input, output, turns, clock, () -> {});
     }
 
-    public ConsoleRunner(Reader input, PrintWriter output, Turns turns, Runnable whenDone) {
+    public ConsoleRunner(Reader input, PrintWriter output, Turns turns, Clock clock, Runnable whenDone) {
         this.input = new BufferedReader(input);
         this.output = output;
         this.turns = turns;
+        this.clock = clock;
         this.whenDone = whenDone;
     }
 
@@ -96,8 +98,9 @@ public class ConsoleRunner implements CommandLineRunner {
     }
 
     /** Wraps a typed line as if it had arrived from a messaging provider. */
-    private static IncomingMessage asMessage(String line) {
-        return new IncomingMessage(UUID.randomUUID().toString(), CONSOLE_USER, Instant.now(), List.of(new Text(line)));
+    private IncomingMessage asMessage(String line) {
+        return new IncomingMessage(
+                UUID.randomUUID().toString(), CONSOLE_USER, clock.instant(), List.of(new Text(line)));
     }
 
     /**

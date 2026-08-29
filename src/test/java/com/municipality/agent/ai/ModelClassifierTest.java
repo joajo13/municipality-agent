@@ -1,4 +1,9 @@
-package com.municipality.agent.router;
+package com.municipality.agent.ai;
+
+import com.municipality.agent.router.Action;
+import com.municipality.agent.router.Classification;
+import com.municipality.agent.router.Domain;
+import com.municipality.agent.router.Intent;
 
 import com.municipality.agent.message.NormalizedMessage;
 import org.junit.jupiter.api.Test;
@@ -226,6 +231,63 @@ class ModelClassifierTest {
     @Test
     void aCallThatNeverHappenedCostNothingRatherThanAGuess() {
         assertThat(classificationBy(new UnreachableModel()).call()).isNull();
+    }
+
+    // --- a provider having a bad day -----------------------------------------
+
+    @Test
+    void aResponseWithNothingInItIsNoAnswer() {
+        var empty = new ChatModel() {
+            @Override
+            public ChatResponse call(Prompt prompt) {
+                return new ChatResponse(List.of());
+            }
+        };
+
+        assertThat(classifiedBy(empty).confidence()).isEqualTo(0.0);
+    }
+
+    @Test
+    void anAnswerOfNothingButSpaceIsNoAnswer() {
+        assertThat(given("   ").confidence()).isEqualTo(0.0);
+    }
+
+    @Test
+    void aProviderThatDoesNotNameItsModelIsCalledUnknown() {
+        var nameless = new CannedModel(LICENCE_ANSWER,
+                ChatResponseMetadata.builder().model("  ").usage(new DefaultUsage(10, 2)).build());
+
+        assertThat(classificationBy(nameless).call().model()).isEqualTo("unknown");
+    }
+
+    @Test
+    void tokensNobodyCountedAreCountedAsNone() {
+        var vague = new CannedModel(LICENCE_ANSWER,
+                ChatResponseMetadata.builder().model("test-model").usage(new DefaultUsage(null, null)).build());
+
+        var call = classificationBy(vague).call();
+
+        assertThat(call.inputTokens()).isZero();
+        assertThat(call.outputTokens()).isZero();
+    }
+
+    @Test
+    void tokensNobodyCouldHaveSpentAreCountedAsNoneToo() {
+        // A negative token count is a provider bug, and a negative cost is worse than a
+        // wrong one: it would quietly subtract from the day's total.
+        var wrong = new CannedModel(LICENCE_ANSWER,
+                ChatResponseMetadata.builder().model("test-model").usage(new DefaultUsage(-5, -1)).build());
+
+        var call = classificationBy(wrong).call();
+
+        assertThat(call.inputTokens()).isZero();
+        assertThat(call.outputTokens()).isZero();
+    }
+
+    @Test
+    void aClassifierWithoutAModelToAskIsNotAClassifier() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new ModelClassifier(null))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     // --- when there is no answer ---------------------------------------------

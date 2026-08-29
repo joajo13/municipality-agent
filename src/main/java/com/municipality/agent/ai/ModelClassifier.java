@@ -1,4 +1,10 @@
-package com.municipality.agent.router;
+package com.municipality.agent.ai;
+
+import com.municipality.agent.router.Action;
+import com.municipality.agent.router.Classification;
+import com.municipality.agent.router.Classifier;
+import com.municipality.agent.router.Domain;
+import com.municipality.agent.router.Intent;
 
 import com.municipality.agent.message.NormalizedMessage;
 import com.municipality.agent.observability.ModelCall;

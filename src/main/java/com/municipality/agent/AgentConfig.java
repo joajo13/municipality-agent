@@ -17,7 +17,7 @@ import com.municipality.agent.observability.PricingProperties;
 import com.municipality.agent.policy.Policy;
 import com.municipality.agent.router.Classifier;
 import com.municipality.agent.router.KeywordClassifier;
-import com.municipality.agent.router.ModelClassifier;
+import com.municipality.agent.ai.ModelClassifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;

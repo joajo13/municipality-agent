@@ -4,7 +4,7 @@ import com.municipality.agent.Outcome;
 import com.municipality.agent.console.DecisionRenderer;
 import com.municipality.agent.delivery.Receipt;
 import com.municipality.agent.delivery.Receipts;
-import com.municipality.agent.observability.Turns;
+import com.municipality.agent.Turns;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;

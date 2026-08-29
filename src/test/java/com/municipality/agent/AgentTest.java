@@ -233,6 +233,36 @@ class AgentTest {
     }
 
     @Test
+    void anAgentIsNotAssembledWithAPieceMissing() {
+        // Every one of these is a null pointer somewhere in the middle of answering a
+        // resident. Refusing to be built is the cheapest place to find out.
+        var normalizer = new com.municipality.agent.message.Normalizer(
+                new com.municipality.agent.message.NoMediaDescriber());
+        var extractor = new com.municipality.agent.extraction.PatternEntityExtractor();
+        var classifier = new com.municipality.agent.router.KeywordClassifier();
+        var policy = new com.municipality.agent.policy.Policy();
+        var costs = new com.municipality.agent.observability.Costs(Agents.PRICES);
+        var idle = Agents.IDLE_TIMEOUT;
+
+        assertThatThrownBy(() -> new Agent(null, extractor, classifier, policy, conversations, costs, idle))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, null, classifier, policy, conversations, costs, idle))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, extractor, null, policy, conversations, costs, idle))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, extractor, classifier, null, conversations, costs, idle))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, extractor, classifier, policy, null, costs, idle))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, extractor, classifier, policy, conversations, null, idle))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, extractor, classifier, policy, conversations, costs, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new Agent(normalizer, extractor, classifier, policy, conversations, costs,
+                Duration.ofMinutes(-1))).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void aTurnThatLosesARaceIsNotSilentlyDropped() {
         // Two messages from the same resident, handled at once by two instances. The one
         // that gets there second has to be told, or an answer is written over.

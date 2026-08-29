@@ -1,7 +1,8 @@
-package com.municipality.agent.observability;
+package com.municipality.agent;
 
-import com.municipality.agent.Agent;
-import com.municipality.agent.Outcome;
+import com.municipality.agent.observability.Costs;
+import com.municipality.agent.observability.ModelCall;
+import com.municipality.agent.observability.Pseudonyms;
 import com.municipality.agent.message.IncomingMessage;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
