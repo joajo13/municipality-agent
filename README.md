@@ -35,6 +35,12 @@ the prompt ends up being a detail of the system rather than its architecture.
 over it with no `default` branch. Adding a content type is therefore a compile error at
 every site that has to handle it, instead of a silent fallthrough at runtime.
 
+**Nothing the model says is trusted.** The classifier asks for a topic, an action and a
+number, and checks all three before anything downstream sees them. A topic that does not
+exist, a missing field, a confidence of 4.0, a timeout, a rejected key — all one event,
+and all read the same way: nothing was understood. What follows is the menu, not a crash
+and not a guess.
+
 **No static I/O.** `ConsoleRunner` receives a `Reader` and a `PrintWriter` through its
 constructor rather than reaching for `System.in` and `System.out`. Its tests drive the whole
 loop as plain Java over a `StringReader`, with no Spring context and no output capture.
@@ -48,8 +54,8 @@ the one test whose subject *is* the context. Everything else is exercised direct
 - [x] Spring Boot baseline
 - [x] Console REPL
 - [x] Message, routing and policy model, driven by a stubbed classifier
-- [ ] **Real classifier on Spring AI** ← in progress
-- [ ] Entity extraction and open-question tracking
+- [x] Real classifier on Spring AI
+- [ ] **Entity extraction and open-question tracking** ← next
 
 ## Layout
 
@@ -94,6 +100,10 @@ you > quiero hablar con una persona
 bot > Te paso con una persona.
 ```
 
+That session is the keyword stand-in, which is either sure or not and has no third
+answer. A model fills the same line with a real number, and the policy stops at the same
+threshold either way.
+
 Filing a complaint needs nothing, so it starts. Asking after one needs its number, which
 nobody has given, so it asks. And somebody who asked for a human gets one, whatever the
 agent did or did not understand about the topic.
@@ -111,13 +121,32 @@ Requires **JDK 25**. The Maven wrapper handles the rest.
 ./mvnw spring-boot:run   # start the console REPL, type 'exit' to quit
 ```
 
+Neither of those needs an API key or a network: with no model configured the keyword
+stand-in classifies, and says so at startup. To run against the real one:
+
+```bash
+export ANTHROPIC_API_KEY=...
+./mvnw spring-boot:run -Dspring-boot.run.profiles=ai
+```
+
+The provider is Anthropic and lives in two places — one dependency and one block of
+`application.yaml`. Nothing in the Java names it: the classifier is handed a Spring AI
+`ChatClient` and does not know what is behind it.
+
 ## Status
 
-The pipeline runs end to end. Whatever a resident sends — text, a voice note, a photo with
-a caption, a shared pin — collapses into the one line a classifier reads, gets routed to a
-topic and an action, and becomes one of five decisions: run the procedure, ask for what is
-missing, answer, offer a menu, or put a person on.
+The pipeline runs end to end, and what reads the message is now a model. Whatever a
+resident sends — text, a voice note, a photo with a caption, a shared pin — collapses into
+the one line the classifier reads, gets routed to a topic and an action, and becomes one
+of five decisions: run the procedure, ask for what is missing, answer, offer a menu, or
+put a person on.
 
-What decides is a stand-in that matches keywords, and nothing is remembered between turns,
-so a procedure that needs a dni will ask for it again every time. A real model comes next,
-and memory after that.
+The prompt is assembled from `Domain` and `Action` rather than kept in a file of text, so
+a topic the code knows about cannot be one the prompt forgot to mention: adding a domain
+stops the build until somebody says what it covers. The answer comes back in the shape of
+those same enums, and is checked before it is believed.
+
+Two things are still stand-ins. Media arrives announced but undescribed — a voice note
+reaches the classifier as `[audio]`, not as what was said. And nothing is remembered
+between turns, so a procedure that needs a dni asks for it again every time. Extraction
+and memory are what comes next.
