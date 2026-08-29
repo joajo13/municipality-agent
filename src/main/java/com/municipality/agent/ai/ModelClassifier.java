@@ -85,9 +85,13 @@ public class ModelClassifier implements Classifier {
         ChatResponse response;
 
         try {
-            response = chat.prompt().system(SYSTEM).user(message.text()).call().chatResponse();
+            response = chat.prompt()
+                    .system(SYSTEM)
+                    .user(Confidential.withoutIdentifiers(message.text()))
+                    .call()
+                    .chatResponse();
         } catch (RuntimeException neverArrived) {
-            return unreadable(message, neverArrived.toString(), null);
+            return unreadable(message, neverArrived, null);
         }
 
         ModelCall call = callOf(response, Duration.ofNanos(System.nanoTime() - startedAt));
@@ -103,7 +107,7 @@ public class ModelClassifier implements Classifier {
 
             return new Classification(reading.asIntent(), call);
         } catch (RuntimeException madeNoSense) {
-            return unreadable(message, madeNoSense.toString(), call);
+            return unreadable(message, madeNoSense, call);
         }
     }
 
@@ -150,5 +154,22 @@ public class ModelClassifier implements Classifier {
         log.warn("Could not classify message {}: {}", message.traceId(), why);
 
         return new Classification(new Intent(Domain.UNKNOWN, Action.INFORMATION, 0.0), call);
+    }
+
+    /**
+     * The same, for something that was thrown.
+     *
+     * <p>Only the type is logged. The message of a parsing failure quotes the text that
+     * failed to parse, and that text is a model's answer about a resident's message —
+     * which is exactly the thing this class has spent the rest of its lines keeping out
+     * of places it does not belong. The whole thing is available at debug, for a machine
+     * where somebody has decided that is acceptable.
+     */
+    private static Classification unreadable(
+            NormalizedMessage message, RuntimeException failure, @Nullable ModelCall call) {
+
+        log.debug("Could not classify message {}", message.traceId(), failure);
+
+        return unreadable(message, failure.getClass().getSimpleName(), call);
     }
 }

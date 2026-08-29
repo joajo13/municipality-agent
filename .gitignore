@@ -35,3 +35,10 @@ build/
 ### Local agent context (paths and notes specific to this machine) ###
 CLAUDE.md
 .claude/
+
+### Anything with a secret in it ###
+.env
+.env.*
+!.env.example
+*.pem
+*.key

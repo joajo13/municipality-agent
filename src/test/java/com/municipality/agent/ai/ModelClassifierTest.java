@@ -135,6 +135,18 @@ class ModelClassifierTest {
     }
 
     @Test
+    void doesNotShowTheModelAnybodysDocumentNumber() {
+        // The one place a resident's words leave this process. What is being asked for is
+        // a topic; no number a resident types helps with that, so no number goes.
+        var model = new CannedModel(LICENCE_ANSWER);
+        var classifier = new ModelClassifier(ChatClient.create(model));
+
+        classifier.classify(new NormalizedMessage("trace-1", "user-1", SENT_AT, "mi dni es 20123456"));
+
+        assertThat(model.everythingItWasTold()).doesNotContain("20123456").contains("[número]");
+    }
+
+    @Test
     void tellsTheModelAboutEveryTopicAndEveryActionThereIs() {
         // The prompt is built from the enums for exactly this reason: a topic nobody
         // mentioned is a topic the model will never answer with.

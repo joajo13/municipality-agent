@@ -43,11 +43,12 @@ public class ApiSecurity {
 
     @Bean
     ApiKeys apiKeys(ApiProperties properties) {
-        return new ApiKeys(properties.key());
+        return new ApiKeys(properties.key(), properties.allowGeneratedKey());
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, ApiKeys keys, JsonMapper json) throws Exception {
+    SecurityFilterChain filterChain(
+            HttpSecurity http, ApiKeys keys, ApiProperties properties, JsonMapper json) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
@@ -59,6 +60,7 @@ public class ApiSecurity {
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().denyAll())
                 .addFilterBefore(new ApiKeyFilter(keys), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new RequestSize(properties.maxRequestBytes()), ApiKeyFilter.class)
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(saysWhatIsMissing(json)))
                 .headers(headers -> headers
                         .httpStrictTransportSecurity(hsts -> hsts.maxAgeInSeconds(HSTS.toSeconds()))

@@ -11,10 +11,15 @@ import java.util.Base64;
 /**
  * The one secret in front of the endpoint.
  *
- * <p>There is no mode where the endpoint is open. When nothing is configured a key is
- * generated at startup and printed once, which is the same bargain a database prints a
- * generated password under: a developer gets a working service in one command, and
- * nobody gets an unauthenticated one by forgetting a line of configuration.
+ * <p>There is no mode where the endpoint is open, and no mode where forgetting to set
+ * this is survivable. A service with no key configured does not start.
+ *
+ * <p>The one exception has to be asked for. {@code agent.api.allow-generated-key} makes a
+ * key up and prints it, which is what the console profile and the compose file turn on so
+ * that a developer gets a working service in one command. It is off by default and it has
+ * to be written down somewhere, because the failure it would otherwise cause is silent:
+ * a production service that generates a key, prints it into the log pipeline, and is then
+ * reachable by everybody who can read a dashboard.
  *
  * <p>The comparison is constant time. A comparison that returns early tells an attacker
  * how much of the key was right, and a few thousand requests turn that into the key.
@@ -25,12 +30,18 @@ public class ApiKeys {
 
     private final byte[] expected;
 
-    public ApiKeys(String configured) {
+    public ApiKeys(String configured, boolean mayGenerateOne) {
         if (configured == null || configured.isBlank()) {
+            if (!mayGenerateOne) {
+                throw new IllegalStateException(
+                        "No API key is configured. Set agent.api.key (or the API_KEY environment variable). "
+                                + "For a local run, agent.api.allow-generated-key=true makes one up and prints it.");
+            }
+
             configured = generated();
 
             log.warn("No API key configured. Using a generated one for this run: {}", configured);
-            log.warn("Set agent.api.key (or API_KEY) to a secret of your own before this goes anywhere.");
+            log.warn("This is a development mode: the key above is now in whatever reads this log.");
         }
 
         this.expected = configured.getBytes(StandardCharsets.UTF_8);

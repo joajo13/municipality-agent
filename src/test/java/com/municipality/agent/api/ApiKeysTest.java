@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** The one secret in front of the endpoint. */
 class ApiKeysTest {
 
-    private final ApiKeys keys = new ApiKeys("the-key");
+    private final ApiKeys keys = new ApiKeys("the-key", false);
 
     @Test
     void theRightKeyIsAccepted() {
@@ -23,18 +23,24 @@ class ApiKeysTest {
     }
 
     @Test
-    void withNothingConfiguredThereIsStillAKey() {
-        // There is no mode where the endpoint is open. An unconfigured service gets a
-        // generated key rather than no key, which is a working service for a developer
-        // and a closed one for everybody else.
-        assertThat(new ApiKeys("").accepts("")).isFalse();
-        assertThat(new ApiKeys(null).accepts(null)).isFalse();
+    void withNothingConfiguredTheServiceDoesNotStart() {
+        // The alternative is a production service that generates a key, prints it into
+        // the log pipeline, and is reachable by everybody who can read a dashboard.
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new ApiKeys("", false))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("agent.api.key");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new ApiKeys(null, false))
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void andItIsNotTheSameOneTwice() {
-        var generated = new ApiKeys("");
+    void unlessSomebodyAskedForTheLocalMode() {
+        // Which still is not an open endpoint: it is a key nobody has been told, printed
+        // where the person who started it can read it.
+        var generated = new ApiKeys("", true);
 
         assertThat(generated.accepts("anything")).isFalse();
+        assertThat(generated.accepts("")).isFalse();
     }
 }

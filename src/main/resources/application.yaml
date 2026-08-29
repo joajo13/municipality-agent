@@ -1,6 +1,24 @@
+# What a caller is told when something goes wrong: the status, and nothing else. A stack
+# trace names the classes and the libraries and their versions, which is a map for
+# somebody deciding what to try next.
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-exception: false
+  shutdown: graceful
+  tomcat:
+    max-http-form-post-size: 64KB
+  max-http-request-header-size: 8KB
+
 spring:
   application:
     name: municipality-agent
+
+  lifecycle:
+    # Long enough to finish the turns already in flight, short enough that a rolling
+    # deploy is not waiting on this.
+    timeout-per-shutdown-phase: 20s
 
   # Embedded and in memory unless a URL says otherwise, so the thing starts with nothing
   # configured. Point DB_URL at Postgres and the same schema is built there.
@@ -70,9 +88,11 @@ management:
 
 agent:
   api:
-    # The shared secret a caller sends in X-Api-Key. Unset means one is generated at
-    # startup and printed once -- there is no mode where the endpoint is open.
+    # The shared secret a caller sends in X-Api-Key. Required: with nothing here the
+    # service refuses to start. The profiles below turn on the local mode that makes one
+    # up instead, which prints it into whatever is reading the log.
     key: ${API_KEY:}
+    allow-generated-key: ${ALLOW_GENERATED_KEY:false}
     messages-per-window: ${RATE_LIMIT:20}
     window: 1m
 
@@ -103,6 +123,24 @@ spring:
 logging:
   level:
     root: warn
+
+agent:
+  api:
+    # Nobody is posting to an endpoint in a terminal session.
+    allow-generated-key: true
+
+---
+
+# The suite. Not production, and allowed to say so in one place rather than in every test
+# that happens to start a context.
+spring:
+  config:
+    activate:
+      on-profile: test
+
+agent:
+  api:
+    allow-generated-key: true
 
 ---
 
