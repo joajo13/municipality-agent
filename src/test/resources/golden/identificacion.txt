@@ -1,0 +1,57 @@
+# What a resident hands over, and when it is read as an answer.
+#
+# classifier: keywords
+
+you       quiero sacar la licencia
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  AskFor [DNI]
+  given     -
+  known     -
+  awaiting  DNI
+  turn      1
+  bot       Para seguir necesito tu DNI.
+
+you       Sarmiento 450
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  AskFor [DNI]
+  given     -
+  known     -
+  awaiting  DNI
+  turn      2
+  bot       Para seguir necesito tu DNI.
+
+you       20123456
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  StartFlow LICENCIAS / START_PROCEDURE
+  given     DNI
+  known     DNI
+  awaiting  -
+  turn      3
+  bot       Listo, arranco el trámite de licencias.
+
+you       quiero consultar el estado de mi reclamo
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  AskFor [CLAIM_NUMBER]
+  given     -
+  known     DNI
+  awaiting  CLAIM_NUMBER
+  turn      4
+  bot       Para seguir necesito el número de reclamo.
+
+you       mi dni es 30999888
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  AskFor [CLAIM_NUMBER]
+  given     DNI
+  known     DNI
+  awaiting  CLAIM_NUMBER
+  turn      5
+  bot       Para seguir necesito el número de reclamo.
+
+you       4471
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  StartFlow RECLAMOS / CHECK_STATUS
+  given     CLAIM_NUMBER
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      6
+  bot       Listo, arranco el trámite de reclamos.

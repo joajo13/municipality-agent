@@ -1,0 +1,279 @@
+# Thirty turns with one resident, and most of what the agent can do.
+#
+# Everything below a "you" line was written by the agent, not by a person. Run
+# the suite with -Dgolden.update=true to write it again after a deliberate change,
+# and read the diff before committing it: that diff is the review.
+#
+# classifier: keywords
+
+you       hola, buenas tardes
+  intent    SMALLTALK / INFORMATION (1.00)
+  decision  Answer SMALLTALK
+  given     -
+  known     -
+  awaiting  -
+  turn      1
+  bot       Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?
+
+you       se rompio una luminaria en Sarmiento 450
+  intent    RECLAMOS / START_PROCEDURE (1.00)
+  decision  StartFlow RECLAMOS / START_PROCEDURE
+  given     -
+  known     -
+  awaiting  -
+  turn      2
+  bot       Listo, arranco el trámite de reclamos.
+
+you       gracias
+  intent    SMALLTALK / INFORMATION (1.00)
+  decision  Answer SMALLTALK
+  given     -
+  known     -
+  awaiting  -
+  turn      3
+  bot       Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?
+
+you       quiero consultar el estado de mi reclamo
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  AskFor [CLAIM_NUMBER]
+  given     -
+  known     -
+  awaiting  CLAIM_NUMBER
+  turn      4
+  bot       Para seguir necesito el número de reclamo.
+
+you       4471
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  StartFlow RECLAMOS / CHECK_STATUS
+  given     CLAIM_NUMBER
+  known     CLAIM_NUMBER
+  awaiting  -
+  turn      5
+  bot       Listo, arranco el trámite de reclamos.
+
+you       cuales son los requisitos para la licencia
+  intent    LICENCIAS / INFORMATION (1.00)
+  decision  Answer LICENCIAS
+  given     -
+  known     CLAIM_NUMBER
+  awaiting  -
+  turn      6
+  bot       Te respondo sobre licencias.
+
+you       quiero sacar la licencia de conducir
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  AskFor [DNI]
+  given     -
+  known     CLAIM_NUMBER
+  awaiting  DNI
+  turn      7
+  bot       Para seguir necesito tu DNI.
+
+you       mi dni es 20.123.456
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  StartFlow LICENCIAS / START_PROCEDURE
+  given     DNI
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      8
+  bot       Listo, arranco el trámite de licencias.
+
+you       necesito un turno en el hospital
+  intent    SALUD / START_PROCEDURE (1.00)
+  decision  StartFlow SALUD / START_PROCEDURE
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      9
+  bot       Listo, arranco el trámite de salud.
+
+you       image:https://cdn.example/img/1.jpg|se rompio una luminaria
+  intent    RECLAMOS / START_PROCEDURE (1.00)
+  decision  StartFlow RECLAMOS / START_PROCEDURE
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      10
+  bot       Listo, arranco el trámite de reclamos.
+
+you       audio:https://cdn.example/voz.ogg
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      11
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       location:-32.9468,-60.6393
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      12
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       button:menu_reclamos|Reclamos
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      13
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       document:https://cdn.example/dni.pdf|dni.pdf
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      14
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       esta lloviendo muchisimo
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      15
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       quiero hablar con una persona
+  intent    UNKNOWN / HANDOFF (1.00)
+  decision  Handoff UNKNOWN
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      16
+  bot       Te paso con una persona.
+
+you       hola de nuevo
+  intent    SMALLTALK / INFORMATION (1.00)
+  decision  Answer SMALLTALK
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      17
+  bot       Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?
+
+wait      8h
+
+you       4471
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     -
+  awaiting  -
+  turn      18
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       quiero consultar el estado de mi reclamo
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  AskFor [CLAIM_NUMBER]
+  given     -
+  known     -
+  awaiting  CLAIM_NUMBER
+  turn      19
+  bot       Para seguir necesito el número de reclamo.
+
+you       no me acuerdo el numero
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  AskFor [CLAIM_NUMBER]
+  given     -
+  known     -
+  awaiting  CLAIM_NUMBER
+  turn      20
+  bot       Para seguir necesito el número de reclamo.
+
+you       REC-2026-00412
+  intent    RECLAMOS / CHECK_STATUS (1.00)
+  decision  StartFlow RECLAMOS / CHECK_STATUS
+  given     CLAIM_NUMBER
+  known     CLAIM_NUMBER
+  awaiting  -
+  turn      21
+  bot       Listo, arranco el trámite de reclamos.
+
+you       quiero un turno con el medico
+  intent    SALUD / START_PROCEDURE (1.00)
+  decision  AskFor [DNI]
+  given     -
+  known     CLAIM_NUMBER
+  awaiting  DNI
+  turn      22
+  bot       Para seguir necesito tu DNI.
+
+you       dni 30999888
+  intent    SALUD / START_PROCEDURE (1.00)
+  decision  StartFlow SALUD / START_PROCEDURE
+  given     DNI
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      23
+  bot       Listo, arranco el trámite de salud.
+
+you       cuanto sale el dolar hoy
+  intent    UNKNOWN / INFORMATION (1.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      24
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       cuando abre el hospital
+  intent    SALUD / INFORMATION (1.00)
+  decision  Answer SALUD
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      25
+  bot       Te respondo sobre salud.
+
+you       quiero reclamar un bache
+  intent    RECLAMOS / START_PROCEDURE (1.00)
+  decision  StartFlow RECLAMOS / START_PROCEDURE
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      26
+  bot       Listo, arranco el trámite de reclamos.
+
+you       gracias, chau
+  intent    SMALLTALK / INFORMATION (1.00)
+  decision  Answer SMALLTALK
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      27
+  bot       Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?
+
+you       hola
+  intent    SMALLTALK / INFORMATION (1.00)
+  decision  Answer SMALLTALK
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      28
+  bot       Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?
+
+you       quiero renovar el carnet
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  StartFlow LICENCIAS / START_PROCEDURE
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      29
+  bot       Listo, arranco el trámite de licencias.
+
+you       20123456
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     CLAIM_NUMBER, DNI
+  awaiting  -
+  turn      30
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.

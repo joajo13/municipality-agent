@@ -1,0 +1,31 @@
+# The model cannot be reached. Every message gets the menu, nobody is billed, and
+# nothing is filed under anybody.
+#
+# classifier: unreachable
+
+you       quiero sacar la licencia de conducir
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     -
+  awaiting  -
+  turn      1
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       mi dni es 20123456
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     DNI
+  known     DNI
+  awaiting  -
+  turn      2
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.
+
+you       quiero hablar con una persona
+  intent    UNKNOWN / INFORMATION (0.00)
+  decision  FallbackMenu
+  given     -
+  known     DNI
+  awaiting  -
+  turn      3
+  bot       No te entendí. Puedo ayudarte con: salud, licencias y reclamos.

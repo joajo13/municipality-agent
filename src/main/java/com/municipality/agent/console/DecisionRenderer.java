@@ -29,7 +29,10 @@ public class DecisionRenderer {
         return switch (decision) {
             case StartFlow flow -> "Listo, arranco el trámite de " + inSpanish(flow.domain()) + ".";
             case AskFor askFor -> "Para seguir necesito " + listed(askFor.missing()) + ".";
-            case Answer(Domain domain) when domain == Domain.SMALLTALK -> "¡Hola! ¿En qué te puedo ayudar?";
+            // Not "¡Hola!": this is also what somebody who said thank you and goodbye
+            // gets, and greeting them on the way out reads like nobody was listening.
+            case Answer(Domain domain) when domain == Domain.SMALLTALK ->
+                    "Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?";
             case Answer answer -> "Te respondo sobre " + inSpanish(answer.domain()) + ".";
             case FallbackMenu() -> "No te entendí. Puedo ayudarte con: salud, licencias y reclamos.";
             case Handoff ignored -> "Te paso con una persona.";

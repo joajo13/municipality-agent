@@ -1,0 +1,33 @@
+# The same conversation with a model behind it, and what each turn cost.
+#
+# classifier: billing
+
+you       hola
+  intent    SMALLTALK / INFORMATION (1.00)
+  decision  Answer SMALLTALK
+  given     -
+  known     -
+  awaiting  -
+  turn      1
+  cost      USD 0.000502 (412 in / 18 out, test-model)
+  bot       Estoy para ayudarte con salud, licencias y reclamos. ¿Qué necesitás?
+
+you       quiero sacar la licencia de conducir
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  AskFor [DNI]
+  given     -
+  known     -
+  awaiting  DNI
+  turn      2
+  cost      USD 0.000502 (412 in / 18 out, test-model)
+  bot       Para seguir necesito tu DNI.
+
+you       20123456
+  intent    LICENCIAS / START_PROCEDURE (1.00)
+  decision  StartFlow LICENCIAS / START_PROCEDURE
+  given     DNI
+  known     DNI
+  awaiting  -
+  turn      3
+  cost      USD 0.000502 (412 in / 18 out, test-model)
+  bot       Listo, arranco el trámite de licencias.
