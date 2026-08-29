@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Findings that have been looked at and are not findings here.
+
+    Every entry needs three things: what it is, why it does not apply to this code, and
+    when it should be looked at again. A suppression with no reason is a vulnerability
+    somebody decided to stop being told about.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!-- Nothing suppressed. Anything added here is reviewed in docs/en/security.md. -->
+
+</suppressions>

@@ -1,0 +1,79 @@
+# Everything needed to watch this thing work, in one command.
+#
+#   docker compose up --build
+#   curl -s localhost:8080/api/v1/messages -H "X-Api-Key: $API_KEY" ...
+#
+# Copy .env.example to .env first, or accept the defaults below, which are development
+# values and say so.
+name: municipality-agent
+
+services:
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-agent}
+      POSTGRES_USER: ${DB_USERNAME:-agent}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-a-development-password}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      # The application waits for this rather than for the port: an accepting socket is
+      # not the same as a database ready to answer.
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-agent} -d ${DB_NAME:-agent}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  agent:
+    build:
+      context: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-agent}
+      DB_USERNAME: ${DB_USERNAME:-agent}
+      DB_PASSWORD: ${DB_PASSWORD:-a-development-password}
+
+      # Unset means one is generated and printed at startup. Fine here, not fine anywhere
+      # that matters.
+      API_KEY: ${API_KEY:-}
+      PSEUDONYM_SECRET: ${PSEUDONYM_SECRET:-}
+
+      # The model. With no key, the keyword stand-in answers and nothing is billed.
+      SPRING_PROFILES_ACTIVE: ${PROFILES:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+      # Traces go to the collector when one is running; see the tracing profile below.
+      OTLP_ENABLED: ${OTLP_ENABLED:-false}
+      OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+
+      # One JSON object per line, which is what a log shipper wants and what a person
+      # reading `docker compose logs` does not. Set LOG_FORMAT= to get plain text back.
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ${LOG_FORMAT:-ecs}
+    ports:
+      - "${PORT:-8080}:8080"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      # The only thing the process writes is a temporary directory. Everything else it
+      # needs is in the image, and the filesystem is read only so that stays true.
+      - /tmp
+
+  # Started only with --profile tracing. Traces are worth looking at when something is
+  # wrong; a collector nobody is reading is a container burning memory.
+  jaeger:
+    image: jaegertracing/all-in-one:1.71.0
+    profiles: [tracing]
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+    restart: unless-stopped
+
+volumes:
+  postgres:

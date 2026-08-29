@@ -31,6 +31,7 @@
         <spring-ai.version>2.0.1</spring-ai.version>
         <jacoco.version>0.8.15</jacoco.version>
         <archunit.version>1.5.0</archunit.version>
+        <dependency-check.version>13.0.0</dependency-check.version>
 
         <!-- Lines, and separately the branches inside them: a suite that walks every line
              down its happy path is not the same as one that has asked what happens when
@@ -192,6 +193,51 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <!--
+            Dependency scanning, on its own profile because it is slow and needs the
+            vulnerability database. CI runs it nightly and on release; nobody should have
+            to wait for it to find out whether their test passes.
+
+            It needs an NVD API key to download at a useful rate. Without one it still
+            works and takes a very long time, which is why the key is a variable and not a
+            secret in a file: set NVD_API_KEY and it goes from twenty minutes to two.
+        -->
+        <profile>
+            <id>security</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${dependency-check.version}</version>
+                        <configuration>
+                            <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                            <!-- Anything scored 7 or above stops the build. Below that is
+                                 a finding to triage, not a reason nothing can ship. -->
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <formats>
+                                <format>HTML</format>
+                                <format>JSON</format>
+                                <format>SARIF</format>
+                            </formats>
+                            <suppressionFiles>
+                                <suppressionFile>security/dependency-check-suppressions.xml</suppressionFile>
+                            </suppressionFiles>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>

@@ -1,0 +1,14 @@
+# Everything the build does not read. Anything left in here ends up in the build context,
+# which means it is sent to the daemon and can end up in a layer.
+target/
+.git/
+.github/
+.idea/
+*.iml
+docs/
+*.md
+compose.yaml
+Dockerfile
+.dockerignore
+.env
+.env.*
