@@ -1,3 +1,28 @@
 spring:
   application:
     name: municipality-agent
+
+  ai:
+    model:
+      # No model is built unless one is asked for. The suite runs and the console runs
+      # with no API key and no network: the keyword stand-in classifies instead, and
+      # says so at startup. The profile below is what turns the real one on.
+      chat: none
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: ai
+
+  ai:
+    model:
+      chat: anthropic
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          # Routing is a lookup, not a piece of writing. The same message should come
+          # back with the same answer every time.
+          temperature: 0.0
