@@ -18,6 +18,9 @@ import java.time.Duration;
  * @param retainFor   how long a conversation is kept before it is deleted outright. The
  *                    idle timeout stops old memory being used; this stops it being kept,
  *                    which is a different promise and the one a resident would ask about.
+ * @param keepReceiptsFor how long an answered message is remembered so that a redelivery
+ *                    of it gets the same answer. No provider redelivers a two-day-old
+ *                    message; past that the row is a record of who wrote in and when.
  * @param sweepCron   when the deleting runs. Nightly, out of the way of the day.
  * @param pseudonymSecret what resident ids are named after in logs and traces. Set it and
  *                    the same resident reads as the same name across restarts and across
@@ -29,6 +32,7 @@ public record AgentProperties(
         @DefaultValue("30m") Duration idleTimeout,
         @DefaultValue("jpa") Store store,
         @DefaultValue("30d") Duration retainFor,
+        @DefaultValue("2d") Duration keepReceiptsFor,
         @DefaultValue("0 0 3 * * *") String sweepCron,
         @DefaultValue("") String pseudonymSecret) {
 

@@ -52,6 +52,8 @@ management:
       probes:
         enabled: true
       show-details: never
+  server:
+    port: ${MANAGEMENT_PORT:8080}
   tracing:
     sampling:
       probability: ${TRACING_SAMPLE_RATE:1.0}
@@ -62,6 +64,13 @@ management:
       endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
 
 agent:
+  api:
+    # The shared secret a caller sends in X-Api-Key. Unset means one is generated at
+    # startup and printed once -- there is no mode where the endpoint is open.
+    key: ${API_KEY:}
+    messages-per-window: ${RATE_LIMIT:20}
+    window: 1m
+
   # Set this and a resident reads as the same pseudonym across restarts and instances.
   # Leave it and one is generated per run: safe, and useless for anything older than
   # the run it came from.

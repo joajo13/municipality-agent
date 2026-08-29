@@ -1,7 +1,11 @@
 package com.municipality.agent;
 
+import com.municipality.agent.api.ApiProperties;
+import com.municipality.agent.api.RateLimiter;
 import com.municipality.agent.conversation.Conversations;
 import com.municipality.agent.conversation.InMemoryConversations;
+import com.municipality.agent.delivery.InMemoryReceipts;
+import com.municipality.agent.delivery.Receipts;
 import com.municipality.agent.extraction.EntityExtractor;
 import com.municipality.agent.extraction.PatternEntityExtractor;
 import com.municipality.agent.message.MediaDescriber;
@@ -127,6 +131,17 @@ public class AgentConfig {
     Conversations conversations() {
         log.warn("Conversations are kept in memory -- one instance only, and forgotten on restart.");
         return new InMemoryConversations();
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "agent.store", havingValue = "memory")
+    Receipts receipts() {
+        return new InMemoryReceipts();
+    }
+
+    @Bean
+    RateLimiter rateLimiter(ApiProperties api) {
+        return new RateLimiter(api.messagesPerWindow(), api.window());
     }
 
     @Bean
