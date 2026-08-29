@@ -32,6 +32,64 @@ spring:
       # says so at startup. The profile below is what turns the real one on.
       chat: none
 
+# What a model costs, per million tokens, keyed by the model id the provider reports on
+# its own response -- not the one that was asked for, because those differ the moment a
+# provider aliases a name to a dated version.
+#
+# These are a starting point, not a quote. Prices change without asking anybody here, and
+# a model with no price is counted as costing nothing, said so in the log, and counted in
+# the agent.model.calls{priced=false} metric.
+# Health and probes for whatever is running this, metrics for whatever is scraping it,
+# and traces only when somebody has said where to send them -- an exporter shouting at a
+# collector that is not there is noise in every log for no benefit.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLE_RATE:1.0}
+  otlp:
+    tracing:
+      export:
+        enabled: ${OTLP_ENABLED:false}
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+agent:
+  # Set this and a resident reads as the same pseudonym across restarts and instances.
+  # Leave it and one is generated per run: safe, and useless for anything older than
+  # the run it came from.
+  pseudonym-secret: ${PSEUDONYM_SECRET:}
+
+  pricing:
+    currency: USD
+    models:
+      claude-haiku-4-5:
+        input-per-million: 1.00
+        output-per-million: 5.00
+      claude-haiku-4-5-20251001:
+        input-per-million: 1.00
+        output-per-million: 5.00
+
+---
+
+# The REPL prints its own trace under every answer, so the log has nothing to add and
+# would only interleave itself with the prompt.
+spring:
+  config:
+    activate:
+      on-profile: console
+
+logging:
+  level:
+    root: warn
+
 ---
 
 spring:

@@ -8,8 +8,8 @@ import java.time.Instant;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * The stand-in classifier, until a real model arrives in step 6. It looks for words it
- * knows and nothing else — no context, no history, no reading between the lines.
+ * The stand-in classifier, which still runs whenever no model is configured. It looks for
+ * words it knows and nothing else — no context, no history, no reading between the lines.
  *
  * <p>Ambiguity is deliberately not its problem. "quiero un turno y consultar mi reclamo"
  * lands on one domain and that is fine: the point of this class is to let the rest of
@@ -23,10 +23,19 @@ class KeywordClassifierTest {
 
     /** Classifies a line as if a resident had typed it. */
     private Intent classify(String text) {
-        return classifier.classify(new NormalizedMessage("trace-1", "user-1", SENT_AT, text));
+        return classifier.classify(new NormalizedMessage("trace-1", "user-1", SENT_AT, text)).intent();
     }
 
     // --- which domain --------------------------------------------------------
+
+    @Test
+    void nobodyIsBilledForAWordList() {
+        // The point of the stand-in is that it costs nothing. Saying so is what lets the
+        // ledger above it stay honest without asking which classifier it is holding.
+        var classification = classifier.classify(new NormalizedMessage("trace-1", "user-1", SENT_AT, "hola"));
+
+        assertThat(classification.call()).isNull();
+    }
 
     @Test
     void recognisesSalud() {

@@ -22,9 +22,9 @@ class MunicipalityAgentApplicationTests {
     private Conversations conversations;
 
     /**
-     * Verifies the Spring context starts. The "test" profile keeps {@code ConsoleRunner}
-     * out of it: @SpringBootTest *does* execute CommandLineRunner beans, so without this
-     * the console would launch and block forever waiting on System.in.
+     * Verifies the Spring context starts. The console lives behind its own profile, which
+     * is not active here: @SpringBootTest *does* execute CommandLineRunner beans, and a
+     * REPL in a test run is a test that blocks forever waiting on System.in.
      */
 
     @Test

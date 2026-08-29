@@ -2,6 +2,7 @@ package com.municipality.agent;
 
 import com.municipality.agent.conversation.Conversation;
 import com.municipality.agent.message.NormalizedMessage;
+import com.municipality.agent.observability.Trace;
 import com.municipality.agent.policy.Decision;
 import com.municipality.agent.router.EntityType;
 import com.municipality.agent.router.Intent;
@@ -21,13 +22,15 @@ import java.util.Map;
  * @param decision     what the agent is going to do about it
  * @param given        what this message handed over, as opposed to what was already known
  * @param conversation what the agent remembers now that this turn has been written
+ * @param trace        what the turn took and what it cost
  */
 public record Outcome(
         NormalizedMessage message,
         Intent intent,
         Decision decision,
         Map<EntityType, String> given,
-        Conversation conversation) {
+        Conversation conversation,
+        Trace trace) {
 
     public Outcome {
         if (message == null) throw new IllegalArgumentException("message is required");
@@ -35,6 +38,7 @@ public record Outcome(
         if (decision == null) throw new IllegalArgumentException("decision is required");
         if (given == null) throw new IllegalArgumentException("given is required");
         if (conversation == null) throw new IllegalArgumentException("conversation is required");
+        if (trace == null) throw new IllegalArgumentException("trace is required");
 
         given = Map.copyOf(given);
     }

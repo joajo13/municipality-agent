@@ -7,6 +7,9 @@ import com.municipality.agent.extraction.PatternEntityExtractor;
 import com.municipality.agent.message.MediaDescriber;
 import com.municipality.agent.message.NoMediaDescriber;
 import com.municipality.agent.message.Normalizer;
+import com.municipality.agent.observability.Costs;
+import com.municipality.agent.observability.Pseudonyms;
+import com.municipality.agent.observability.PricingProperties;
 import com.municipality.agent.policy.Policy;
 import com.municipality.agent.router.Classifier;
 import com.municipality.agent.router.KeywordClassifier;
@@ -40,7 +43,7 @@ import java.time.Clock;
  * injected with the interface and does not notice either way.
  */
 @Configuration
-@EnableConfigurationProperties(AgentProperties.class)
+@EnableConfigurationProperties({AgentProperties.class, PricingProperties.class})
 @EnableScheduling
 public class AgentConfig {
 
@@ -102,6 +105,16 @@ public class AgentConfig {
         return new Policy();
     }
 
+    @Bean
+    Costs costs(PricingProperties pricing) {
+        return new Costs(pricing);
+    }
+
+    @Bean
+    Pseudonyms pseudonyms(AgentProperties properties) {
+        return new Pseudonyms(properties.pseudonymSecret());
+    }
+
     /**
      * Conversations in memory, for a run with no infrastructure at all behind it.
      *
@@ -123,8 +136,9 @@ public class AgentConfig {
             Classifier classifier,
             Policy policy,
             Conversations conversations,
+            Costs costs,
             AgentProperties properties) {
 
-        return new Agent(normalizer, extractor, classifier, policy, conversations, properties.idleTimeout());
+        return new Agent(normalizer, extractor, classifier, policy, conversations, costs, properties.idleTimeout());
     }
 }

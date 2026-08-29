@@ -19,13 +19,18 @@ import java.time.Duration;
  *                    idle timeout stops old memory being used; this stops it being kept,
  *                    which is a different promise and the one a resident would ask about.
  * @param sweepCron   when the deleting runs. Nightly, out of the way of the day.
+ * @param pseudonymSecret what resident ids are named after in logs and traces. Set it and
+ *                    the same resident reads as the same name across restarts and across
+ *                    instances; leave it and one is generated per run, which is safe and
+ *                    useless for anything older than the run.
  */
 @ConfigurationProperties("agent")
 public record AgentProperties(
         @DefaultValue("30m") Duration idleTimeout,
         @DefaultValue("jpa") Store store,
         @DefaultValue("30d") Duration retainFor,
-        @DefaultValue("0 0 3 * * *") String sweepCron) {
+        @DefaultValue("0 0 3 * * *") String sweepCron,
+        @DefaultValue("") String pseudonymSecret) {
 
     /** Where conversations are kept. The names are the values {@code agent.store} takes. */
     public enum Store {

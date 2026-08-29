@@ -29,7 +29,7 @@ public class KeywordClassifier implements Classifier {
             Set.of("horario", "requisitos", "cuanto", "donde", "cuando", "cuales");
 
     @Override
-    public Intent classify(NormalizedMessage message) {
+    public Classification classify(NormalizedMessage message) {
         Set<String> words = wordsOf(message.text());
         Domain domain = domainOf(words);
 
@@ -37,7 +37,7 @@ public class KeywordClassifier implements Classifier {
         // neither is the only case where it admits to knowing nothing.
         boolean recognisedSomething = domain != Domain.UNKNOWN || saysWhatToDo(words);
 
-        return new Intent(domain, actionOf(words, domain), recognisedSomething ? 1.0 : 0.0);
+        return Classification.free(new Intent(domain, actionOf(words, domain), recognisedSomething ? 1.0 : 0.0));
     }
 
     /** The first domain declared that this message mentions, or {@link Domain#UNKNOWN}. */

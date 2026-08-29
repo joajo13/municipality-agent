@@ -1,12 +1,10 @@
 package com.municipality.agent.console;
 
-import com.municipality.agent.Agent;
 import com.municipality.agent.Outcome;
+import com.municipality.agent.observability.Turns;
 import com.municipality.agent.message.IncomingMessage;
 import com.municipality.agent.message.Text;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
@@ -21,12 +19,18 @@ import java.util.UUID;
  * agent decided and how it got there.
  *
  * <p>Input and output arrive through the constructor rather than being taken from
- * {@code System.in} and {@code System.out} inside the loop. In production
- * {@link ConsoleConfig} hands it the real terminal; a test hands it a string to read from
- * and a buffer to write into.
+ * {@code System.in} and {@code System.out} inside the loop. {@link ConsoleConfig} hands it
+ * the real terminal; a test hands it a string to read from and a buffer to write into.
+ *
+ * <p>It only exists under the {@code console} profile. The service's own way of running is
+ * to sit there and be sent messages; a process that reads standard input is a developer
+ * tool, and one that reads standard input in production is a process waiting on a
+ * terminal nobody is at.
+ *
+ * <p>Ending the loop has to end the process, and that is what {@code whenDone} is for.
+ * There are non-daemon threads in a started service — a scheduler, a connection pool —
+ * and typing "exit" into a REPL that then hangs is a poor demonstration of anything.
  */
-@Component
-@Profile("!test")
 public class ConsoleRunner implements CommandLineRunner {
 
     private static final String EXIT_COMMAND = "exit";
@@ -36,13 +40,20 @@ public class ConsoleRunner implements CommandLineRunner {
 
     private final BufferedReader input;
     private final PrintWriter output;
-    private final Agent agent;
+    private final Turns turns;
     private final DecisionRenderer renderer = new DecisionRenderer();
 
-    public ConsoleRunner(Reader input, PrintWriter output, Agent agent) {
+    private final Runnable whenDone;
+
+    public ConsoleRunner(Reader input, PrintWriter output, Turns turns) {
+        this(input, output, turns, () -> {});
+    }
+
+    public ConsoleRunner(Reader input, PrintWriter output, Turns turns, Runnable whenDone) {
         this.input = new BufferedReader(input);
         this.output = output;
-        this.agent = agent;
+        this.turns = turns;
+        this.whenDone = whenDone;
     }
 
     @Override
@@ -64,11 +75,24 @@ public class ConsoleRunner implements CommandLineRunner {
                 continue;
             }
 
-            print(agent.handle(asMessage(line)));
+            print(turns.handle(asMessage(line)));
         }
 
         output.println("Bye.");
         output.flush();
+
+        whenDone.run();
+    }
+
+    /** What this turn cost, and what it spent it on. */
+    private static String priceOf(Outcome outcome) {
+        var trace = outcome.trace();
+        var call = trace.call();
+
+        if (call == null) return "-";
+
+        return trace.cost().currency() + " " + trace.cost().amount().toPlainString()
+                + "  (" + call.inputTokens() + " in / " + call.outputTokens() + " out, " + call.model() + ")";
     }
 
     /** Wraps a typed line as if it had arrived from a messaging provider. */
@@ -96,6 +120,9 @@ public class ConsoleRunner implements CommandLineRunner {
         }
         if (!conversation.known().isEmpty()) {
             output.println("  recordado  " + new TreeSet<>(conversation.known().keySet()));
+        }
+        if (outcome.trace().reachedAModel()) {
+            output.println("  costo      " + priceOf(outcome));
         }
 
         output.println();

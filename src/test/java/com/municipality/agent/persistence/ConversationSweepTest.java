@@ -34,7 +34,8 @@ class ConversationSweepTest {
 
     private static final Instant NOON = Instant.parse("2026-08-24T12:00:00Z");
     private static final AgentProperties KEPT_FOR_A_MONTH =
-            new AgentProperties(Duration.ofMinutes(30), AgentProperties.Store.JPA, Duration.ofDays(30), "0 0 3 * * *");
+            new AgentProperties(Duration.ofMinutes(30), AgentProperties.Store.JPA, Duration.ofDays(30),
+                    "0 0 3 * * *", "");
 
     @Autowired
     private ConversationRows rows;

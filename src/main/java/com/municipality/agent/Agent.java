@@ -7,6 +7,10 @@ import com.municipality.agent.extraction.EntityExtractor;
 import com.municipality.agent.message.IncomingMessage;
 import com.municipality.agent.message.NormalizedMessage;
 import com.municipality.agent.message.Normalizer;
+import com.municipality.agent.observability.Cost;
+import com.municipality.agent.observability.Costs;
+import com.municipality.agent.observability.ModelCall;
+import com.municipality.agent.observability.Trace;
 import com.municipality.agent.policy.Answer;
 import com.municipality.agent.policy.AskFor;
 import com.municipality.agent.policy.Decision;
@@ -14,6 +18,7 @@ import com.municipality.agent.policy.FallbackMenu;
 import com.municipality.agent.policy.Handoff;
 import com.municipality.agent.policy.Policy;
 import com.municipality.agent.policy.StartFlow;
+import com.municipality.agent.router.Classification;
 import com.municipality.agent.router.Classifier;
 import com.municipality.agent.router.EntityType;
 import com.municipality.agent.router.Intent;
@@ -47,6 +52,7 @@ public class Agent {
     private final Classifier classifier;
     private final Policy policy;
     private final Conversations conversations;
+    private final Costs costs;
     private final Duration idleTimeout;
 
     public Agent(
@@ -55,6 +61,7 @@ public class Agent {
             Classifier classifier,
             Policy policy,
             Conversations conversations,
+            Costs costs,
             Duration idleTimeout) {
 
         if (normalizer == null) throw new IllegalArgumentException("normalizer is required");
@@ -62,6 +69,7 @@ public class Agent {
         if (classifier == null) throw new IllegalArgumentException("classifier is required");
         if (policy == null) throw new IllegalArgumentException("policy is required");
         if (conversations == null) throw new IllegalArgumentException("conversations is required");
+        if (costs == null) throw new IllegalArgumentException("costs is required");
         if (idleTimeout == null || idleTimeout.isNegative()) throw new IllegalArgumentException("idleTimeout");
 
         this.normalizer = normalizer;
@@ -69,22 +77,34 @@ public class Agent {
         this.classifier = classifier;
         this.policy = policy;
         this.conversations = conversations;
+        this.costs = costs;
         this.idleTimeout = idleTimeout;
     }
 
     public Outcome handle(IncomingMessage message) {
+        long startedAt = System.nanoTime();
+
         NormalizedMessage normalized = normalizer.normalize(message);
         Conversation opening = remembered(message);
 
         Map<EntityType, String> given = extractor.extract(normalized.text(), opening.expecting());
         Conversation told = opening.learned(given);
 
-        Intent intent = told.read(classifier.classify(normalized));
+        Classification classification = classifier.classify(normalized);
+        Intent intent = told.read(classification.intent());
         Decision decision = policy.decide(intent, told.known());
 
         Conversation closing = conversations.save(told.after(waitingFor(decision, intent, told), message.timestamp()));
 
-        return new Outcome(normalized, intent, decision, given, closing);
+        return new Outcome(normalized, intent, decision, given, closing, traced(message, classification, startedAt));
+    }
+
+    /** What the turn took and what it cost, measured around everything above. */
+    private Trace traced(IncomingMessage message, Classification classification, long startedAt) {
+        ModelCall call = classification.call();
+        Cost cost = call == null ? Cost.nothing(costs.currency()) : costs.of(call);
+
+        return new Trace(message.traceId(), Duration.ofNanos(System.nanoTime() - startedAt), call, cost);
     }
 
     /** What is remembered about this resident, unless it is old enough to be somebody else's day. */

@@ -1,6 +1,6 @@
 package com.municipality.agent.console;
 
-import com.municipality.agent.Agent;
+import com.municipality.agent.observability.Turns;
 import com.municipality.agent.support.Agents;
 import org.junit.jupiter.api.Test;
 
@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class ConsoleRunnerTest {
 
-    private static Agent realAgent() {
-        return Agents.keyword();
+    private static Turns realAgent() {
+        return Agents.watched(Agents.keyword());
     }
 
     /** Feeds {@code typed} to the console as if a user had typed it; returns everything printed. */

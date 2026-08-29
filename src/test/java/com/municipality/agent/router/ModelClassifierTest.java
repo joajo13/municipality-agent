@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.DefaultUsage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -32,20 +34,31 @@ class ModelClassifierTest {
 
     private static final Instant SENT_AT = Instant.parse("2026-08-22T10:00:00Z");
 
+    private static final String LICENCE_ANSWER =
+            """
+            {"domain": "LICENCIAS", "action": "START_PROCEDURE", "confidence": 0.9}
+            """;
+
     /** A model that always answers the same thing, and remembers what it was asked. */
     private static final class CannedModel implements ChatModel {
 
         private final String answer;
+        private final ChatResponseMetadata metadata;
         private Prompt asked = new Prompt(List.of());
 
         private CannedModel(String answer) {
+            this(answer, ChatResponseMetadata.builder().model("test-model").usage(new DefaultUsage(412, 18)).build());
+        }
+
+        private CannedModel(String answer, ChatResponseMetadata metadata) {
             this.answer = answer;
+            this.metadata = metadata;
         }
 
         @Override
         public ChatResponse call(Prompt prompt) {
             this.asked = prompt;
-            return new ChatResponse(List.of(new Generation(new AssistantMessage(answer))));
+            return new ChatResponse(List.of(new Generation(new AssistantMessage(answer))), metadata);
         }
 
         /** Everything the model was told, system prompt and message alike. */
@@ -63,10 +76,14 @@ class ModelClassifierTest {
         }
     }
 
-    private static Intent classifiedBy(ChatModel model) {
+    private static Classification classificationBy(ChatModel model) {
         var classifier = new ModelClassifier(ChatClient.create(model));
 
         return classifier.classify(new NormalizedMessage("trace-1", "user-1", SENT_AT, "quiero sacar la licencia"));
+    }
+
+    private static Intent classifiedBy(ChatModel model) {
+        return classificationBy(model).intent();
     }
 
     /** What the classifier makes of {@code answer} coming back from the model. */
@@ -164,6 +181,51 @@ class ModelClassifierTest {
 
         assertThat(intent.domain()).isEqualTo(Domain.UNKNOWN);
         assertThat(intent.confidence()).isEqualTo(0.0);
+    }
+
+    // --- what it cost --------------------------------------------------------
+
+    @Test
+    void whatTheCallCostComesBackWithTheAnswer() {
+        // The provider's own count off its own response. Estimating it here would
+        // disagree with the invoice, and the disagreement would surface a month later.
+        var call = classificationBy(new CannedModel(LICENCE_ANSWER)).call();
+
+        assertThat(call).isNotNull();
+        assertThat(call.model()).isEqualTo("test-model");
+        assertThat(call.inputTokens()).isEqualTo(412);
+        assertThat(call.outputTokens()).isEqualTo(18);
+        assertThat(call.totalTokens()).isEqualTo(430);
+        assertThat(call.took()).isGreaterThanOrEqualTo(java.time.Duration.ZERO);
+    }
+
+    @Test
+    void anAnswerThatCameApartStillCost() {
+        // Tokens were spent whether or not the answer was any use, and a ledger that
+        // only counts the useful ones understates the bill.
+        var classification = classificationBy(new CannedModel("no es json"));
+
+        assertThat(classification.intent().confidence()).isEqualTo(0.0);
+        assertThat(classification.call()).isNotNull();
+    }
+
+    @Test
+    void aProviderThatReportsNothingIsNotAnError() {
+        // No metadata, no model name, no usage. A turn that answered a resident correctly
+        // must not then fail on the way to the ledger.
+        var bare = new CannedModel(LICENCE_ANSWER, ChatResponseMetadata.builder().build());
+
+        var call = classificationBy(bare).call();
+
+        assertThat(call).isNotNull();
+        assertThat(call.model()).isEqualTo("unknown");
+        assertThat(call.inputTokens()).isZero();
+        assertThat(call.outputTokens()).isZero();
+    }
+
+    @Test
+    void aCallThatNeverHappenedCostNothingRatherThanAGuess() {
+        assertThat(classificationBy(new UnreachableModel()).call()).isNull();
     }
 
     // --- when there is no answer ---------------------------------------------

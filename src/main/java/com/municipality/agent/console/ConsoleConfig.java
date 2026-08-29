@@ -1,5 +1,8 @@
 package com.municipality.agent.console;
 
+import com.municipality.agent.observability.Turns;
+import org.springframework.boot.SpringApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -17,7 +20,7 @@ import java.io.Reader;
  * for the whole JVM.
  */
 @Configuration
-@Profile("!test")
+@Profile("console")
 public class ConsoleConfig {
 
     @Bean(destroyMethod = "")
@@ -28,5 +31,16 @@ public class ConsoleConfig {
     @Bean(destroyMethod = "")
     PrintWriter consoleOutput() {
         return new PrintWriter(System.out);
+    }
+
+    /**
+     * The REPL is the whole process here, so the end of the loop is the end of the run.
+     * A started service has non-daemon threads in it — a scheduler, a connection pool —
+     * and without this, typing "exit" would print "Bye." and then sit there.
+     */
+    @Bean
+    ConsoleRunner consoleRunner(Reader consoleInput, PrintWriter consoleOutput, Turns turns, ApplicationContext context) {
+        return new ConsoleRunner(consoleInput, consoleOutput, turns,
+                () -> System.exit(SpringApplication.exit(context)));
     }
 }

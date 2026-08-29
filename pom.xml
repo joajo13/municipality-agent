@@ -55,6 +55,32 @@
             <artifactId>jspecify</artifactId>
         </dependency>
 
+        <!-- Health, metrics and the endpoints an orchestrator probes. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Tracing: spans through Micrometer, exported over OTLP when an endpoint is
+             configured and dropped on the floor when one is not. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Prometheus scrape endpoint, for the metrics that are counters rather than spans. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Where conversations are kept between turns. JPA over a connection pool,
              with the schema owned by Flyway and Hibernate only allowed to check it. -->
         <dependency>
