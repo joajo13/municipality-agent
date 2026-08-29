@@ -55,6 +55,44 @@
             <artifactId>jspecify</artifactId>
         </dependency>
 
+        <!-- Where conversations are kept between turns. JPA over a connection pool,
+             with the schema owned by Flyway and Hibernate only allowed to check it. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Boot 4 keeps each integration in its own module: flyway-core is the tool,
+             spring-boot-flyway is what runs it at startup. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- Embedded by default so the thing runs with nothing configured; Postgres the
+             moment a URL is given. Both are drivers, neither is on the compile path. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- The model behind the classifier. Anthropic is the provider that is
              configured; nothing outside the router package names it. -->
         <dependency>
@@ -65,6 +103,20 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- The JPA test slice: a context with the schema, the repositories and nothing
+             else. Boot 4 ships one module per slice rather than one jar of all of them. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jdbc-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

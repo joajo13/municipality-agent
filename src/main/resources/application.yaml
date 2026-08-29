@@ -2,6 +2,29 @@ spring:
   application:
     name: municipality-agent
 
+  # Embedded and in memory unless a URL says otherwise, so the thing starts with nothing
+  # configured. Point DB_URL at Postgres and the same schema is built there.
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:agent;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    hikari:
+      pool-name: agent-pool
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema. Hibernate is allowed to check it and nothing else: a
+      # schema that drifts should stop the service, not be quietly patched under it.
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
   ai:
     model:
       # No model is built unless one is asked for. The suite runs and the console runs

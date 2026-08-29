@@ -17,9 +17,13 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.time.Clock;
 
 /**
  * Assembles the agent out of its parts.
@@ -37,9 +41,21 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableConfigurationProperties(AgentProperties.class)
+@EnableScheduling
 public class AgentConfig {
 
     private static final Logger log = LoggerFactory.getLogger(AgentConfig.class);
+
+    /**
+     * The one wall clock in the system, so that everything else can be handed a time
+     * instead of reaching for one. A turn reads its time off the message that arrived;
+     * only the sweep, which no message triggers, has to ask.
+     */
+    @Bean
+    @ConditionalOnMissingBean(Clock.class)
+    Clock clock() {
+        return Clock.systemUTC();
+    }
 
     @Bean
     MediaDescriber mediaDescriber() {
@@ -87,14 +103,16 @@ public class AgentConfig {
     }
 
     /**
-     * Conversations in memory, unless something else was put on the classpath and
-     * configured — the store is the part that has to change first for a second instance
-     * of this service to be worth running.
+     * Conversations in memory, for a run with no infrastructure at all behind it.
+     *
+     * <p>Not the default: {@code agent.store} is {@code jpa} unless somebody says
+     * otherwise, and a map is one instance, forgotten on restart, and shared with
+     * nobody. That is a fine way to try the console and a poor way to run a service.
      */
     @Bean
-    @ConditionalOnMissingBean(Conversations.class)
+    @ConditionalOnProperty(name = "agent.store", havingValue = "memory")
     Conversations conversations() {
-        log.info("Conversations are kept in memory -- one instance only, and forgotten on restart.");
+        log.warn("Conversations are kept in memory -- one instance only, and forgotten on restart.");
         return new InMemoryConversations();
     }
 

@@ -1,5 +1,7 @@
 package com.municipality.agent;
 
+import com.municipality.agent.conversation.Conversations;
+import com.municipality.agent.persistence.JpaConversations;
 import com.municipality.agent.router.Classifier;
 import com.municipality.agent.router.KeywordClassifier;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,9 @@ class MunicipalityAgentApplicationTests {
 
     @Autowired
     private Classifier classifier;
+
+    @Autowired
+    private Conversations conversations;
 
     /**
      * Verifies the Spring context starts. The "test" profile keeps {@code ConsoleRunner}
@@ -34,6 +39,16 @@ class MunicipalityAgentApplicationTests {
     @Test
     void withoutAModelTheAgentFallsBackToKeywords() {
         assertThat(classifier).isInstanceOf(KeywordClassifier.class);
+    }
+
+    /**
+     * The default store is the table, not the map. Starting with nothing configured gets
+     * an embedded database with the real schema on it, so the thing that runs in a test
+     * is the thing that runs in production with a different URL.
+     */
+    @Test
+    void conversationsAreKeptInATableByDefault() {
+        assertThat(conversations).isInstanceOf(JpaConversations.class);
     }
 
 }
