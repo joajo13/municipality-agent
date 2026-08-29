@@ -1,5 +1,9 @@
 package com.municipality.agent;
 
+import com.municipality.agent.conversation.Conversations;
+import com.municipality.agent.conversation.InMemoryConversations;
+import com.municipality.agent.extraction.EntityExtractor;
+import com.municipality.agent.extraction.PatternEntityExtractor;
 import com.municipality.agent.message.MediaDescriber;
 import com.municipality.agent.message.NoMediaDescriber;
 import com.municipality.agent.message.Normalizer;
@@ -12,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
  * injected with the interface and does not notice either way.
  */
 @Configuration
+@EnableConfigurationProperties(AgentProperties.class)
 public class AgentConfig {
 
     private static final Logger log = LoggerFactory.getLogger(AgentConfig.class);
@@ -70,12 +77,36 @@ public class AgentConfig {
     }
 
     @Bean
+    EntityExtractor entityExtractor() {
+        return new PatternEntityExtractor();
+    }
+
+    @Bean
     Policy policy() {
         return new Policy();
     }
 
+    /**
+     * Conversations in memory, unless something else was put on the classpath and
+     * configured — the store is the part that has to change first for a second instance
+     * of this service to be worth running.
+     */
     @Bean
-    Agent agent(Normalizer normalizer, Classifier classifier, Policy policy) {
-        return new Agent(normalizer, classifier, policy);
+    @ConditionalOnMissingBean(Conversations.class)
+    Conversations conversations() {
+        log.info("Conversations are kept in memory -- one instance only, and forgotten on restart.");
+        return new InMemoryConversations();
+    }
+
+    @Bean
+    Agent agent(
+            Normalizer normalizer,
+            EntityExtractor extractor,
+            Classifier classifier,
+            Policy policy,
+            Conversations conversations,
+            AgentProperties properties) {
+
+        return new Agent(normalizer, extractor, classifier, policy, conversations, properties.idleTimeout());
     }
 }

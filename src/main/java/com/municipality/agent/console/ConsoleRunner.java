@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.time.Instant;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.UUID;
 
 /**
@@ -75,13 +76,28 @@ public class ConsoleRunner implements CommandLineRunner {
         return new IncomingMessage(UUID.randomUUID().toString(), CONSOLE_USER, Instant.now(), List.of(new Text(line)));
     }
 
+    /**
+     * The trace above the reply, and never a value out of it. What a resident handed over
+     * is their document number: the names of what is known say everything a developer
+     * reading this needs, and none of it is anybody's identity.
+     */
     private void print(Outcome outcome) {
         var intent = outcome.intent();
+        var conversation = outcome.conversation();
 
         output.println();
+        output.println("  turno      " + conversation.turns());
         output.println("  texto      " + outcome.message().text());
         output.println("  intent     " + intent.domain() + " / " + intent.action() + "  (" + intent.confidence() + ")");
         output.println("  decision   " + renderer.summary(outcome.decision()));
+
+        if (!outcome.given().isEmpty()) {
+            output.println("  recibido   " + new TreeSet<>(outcome.given().keySet()));
+        }
+        if (!conversation.known().isEmpty()) {
+            output.println("  recordado  " + new TreeSet<>(conversation.known().keySet()));
+        }
+
         output.println();
         output.println("bot > " + renderer.reply(outcome.decision()));
         output.println();

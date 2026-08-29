@@ -1,10 +1,7 @@
 package com.municipality.agent.console;
 
 import com.municipality.agent.Agent;
-import com.municipality.agent.message.NoMediaDescriber;
-import com.municipality.agent.message.Normalizer;
-import com.municipality.agent.policy.Policy;
-import com.municipality.agent.router.KeywordClassifier;
+import com.municipality.agent.support.Agents;
 import org.junit.jupiter.api.Test;
 
 import java.io.PrintWriter;
@@ -23,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ConsoleRunnerTest {
 
     private static Agent realAgent() {
-        return new Agent(new Normalizer(new NoMediaDescriber()), new KeywordClassifier(), new Policy());
+        return Agents.keyword();
     }
 
     /** Feeds {@code typed} to the console as if a user had typed it; returns everything printed. */
